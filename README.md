@@ -24,14 +24,6 @@ El envío de resúmenes diarios se realiza mediante un script Node.js que lee lo
 - El frontend no expone ninguna clave privada ni credenciales sensibles.
 - El archivo de credenciales de Firebase Admin y las claves de SendGrid solo se usan en el script backend y no están incluidos en este repositorio.
 
-## Demo
-
-(Si tienes un link de demo, agrégalo aquí)
-
-## Autor
-
-Desarrollado por [Tu Nombre] para el Hospice San Camilo.
-
 ---
 
 ¡Gracias por visitar el proyecto!
