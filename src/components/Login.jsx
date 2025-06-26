@@ -42,7 +42,7 @@ const Login = ({ onLogin }) => {
       <div className="w-full max-w-md">
         {/* Logo y título */}
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🏥</div>
+          <img src="/logo-hospice.png" alt="Hospice San Camilo" className="mx-auto mb-4 w-28 h-28 object-contain rounded-xl shadow" />
           <h1 className="text-4xl font-bold text-amber-900 mb-2">San Camilo</h1>
           <p className="text-amber-700 text-lg">Sistema de Gestión</p>
         </div>
@@ -58,18 +58,19 @@ const Login = ({ onLogin }) => {
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-amber-800 mb-2">Correo electrónico</label>
+              <label className="block text-base font-bold text-amber-800 mb-2">Correo electrónico</label>
               <div className="relative">
                 <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-400 w-5 h-5" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all"
+                  className="w-full pl-10 pr-4 py-3 border-2 border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all text-lg"
                   placeholder="tu@email.com"
                   required
                 />
               </div>
+              <p className="text-base text-amber-700 mt-2 font-semibold">Solo usamos su correo para registrarlos y enviarles los partes diarios.</p>
             </div>
             <button
               type="submit"
