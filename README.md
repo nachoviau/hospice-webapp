@@ -19,10 +19,6 @@ El sistema fue diseñado específicamente para ser usado por voluntarios mayores
 
 El envío de resúmenes diarios se realiza mediante un script Node.js que lee los datos de Firestore y utiliza SendGrid para enviar los correos a todos los voluntarios registrados.
 
-## Seguridad
-
-- El frontend no expone ninguna clave privada ni credenciales sensibles.
-- El archivo de credenciales de Firebase Admin y las claves de SendGrid solo se usan en el script backend y no están incluidos en este repositorio.
 
 ---
 
