@@ -11,6 +11,7 @@ import subMonths from "date-fns/subMonths";
 import es from "date-fns/locale/es";
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import { useAuth } from "../contexts/AuthContext";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
 // Estilos personalizados para el calendario
@@ -218,11 +219,14 @@ const localizer = dateFnsLocalizer({
 });
 
 const Calendario = () => {
+  const { puedeEditar } = useAuth();
   const [vista, setVista] = useState("week");
   const [fechaActual, setFechaActual] = useState(new Date());
   const [eventos, setEventos] = useState([]);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [eventoEditando, setEventoEditando] = useState(null);
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [eventoAEliminar, setEventoAEliminar] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     start: new Date(),
@@ -276,6 +280,8 @@ const Calendario = () => {
   }, []);
 
   const abrirModalNuevo = () => {
+    if (!puedeEditar) return; // No permitir crear si es usuario anónimo
+    
     const ahora = new Date();
     const horaInicio = new Date(ahora.getTime() + 30 * 60 * 1000); // 30 minutos después
     const horaFin = new Date(horaInicio.getTime() + 60 * 60 * 1000); // 1 hora después
@@ -292,6 +298,8 @@ const Calendario = () => {
   };
 
   const abrirModal = (evento = null) => {
+    if (!puedeEditar) return; // No permitir editar si es usuario anónimo
+    
     if (evento) {
       // Editar evento existente
       setEventoEditando(evento);
@@ -343,10 +351,19 @@ const Calendario = () => {
     }
   };
 
-  const eliminarEvento = async (evento) => {
+  const confirmarEliminacion = (evento) => {
+    setEventoAEliminar(evento);
+    setMostrarConfirmacion(true);
+  };
+
+  const eliminarEvento = async () => {
+    if (!eventoAEliminar) return;
+    
     try {
-      await deleteDoc(doc(db, "eventos", evento.id));
-      setEventos(prev => prev.filter(e => e.id !== evento.id));
+      await deleteDoc(doc(db, "eventos", eventoAEliminar.id));
+      setEventos(prev => prev.filter(e => e.id !== eventoAEliminar.id));
+      setMostrarConfirmacion(false);
+      setEventoAEliminar(null);
       cerrarModal(); // Cerrar modal automáticamente después de eliminar
     } catch (error) {
       console.error("Error al eliminar evento:", error);
@@ -354,6 +371,8 @@ const Calendario = () => {
   };
 
   const handleSelect = ({ start, end }) => {
+    if (!puedeEditar) return; // No permitir crear eventos si es usuario anónimo
+    
     console.log("Fecha seleccionada:", start, end);
     setFormData(prev => ({
       ...prev,
@@ -385,23 +404,25 @@ const Calendario = () => {
             : "No tienes eventos en este mes."
         }
       </p>
-      <button
-        onClick={() => abrirModalNuevo()}
-        className="bg-amber-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-      >
-        + Crear primer evento
-      </button>
+      {puedeEditar && (
+        <button
+          onClick={() => abrirModalNuevo()}
+                        className="bg-amber-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+        >
+          + Crear primer evento
+        </button>
+      )}
     </div>
   );
 
   return (
-    <div className="max-w-6xl mx-auto mt-8 pb-20">
-      <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold text-amber-900">Calendario</h2>
-          <div className="flex gap-3">
+    <div className="max-w-6xl mx-auto mt-4 md:mt-8 pb-20">
+      <div className="bg-white rounded-2xl shadow-xl p-4 md:p-6 mb-4 md:mb-6 border border-amber-200">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-amber-900">Calendario</h2>
+          <div className="flex flex-wrap gap-2 md:gap-3">
             <button
-              className={`px-6 py-3 rounded-xl font-semibold border-2 transition-all duration-200 ${
+              className={`px-3 md:px-6 py-2 md:py-3 rounded-xl font-semibold border-2 transition-all duration-200 text-sm md:text-base ${
                 vista === "week" 
                   ? "bg-amber-200 border-amber-400 text-amber-900 shadow-md" 
                   : "bg-white border-amber-200 text-amber-700 hover:bg-amber-50"
@@ -411,7 +432,7 @@ const Calendario = () => {
               Semana
             </button>
             <button
-              className={`px-6 py-3 rounded-xl font-semibold border-2 transition-all duration-200 ${
+              className={`px-3 md:px-6 py-2 md:py-3 rounded-xl font-semibold border-2 transition-all duration-200 text-sm md:text-base ${
                 vista === "month" 
                   ? "bg-amber-200 border-amber-400 text-amber-900 shadow-md" 
                   : "bg-white border-amber-200 text-amber-700 hover:bg-amber-50"
@@ -421,7 +442,7 @@ const Calendario = () => {
               Mes
             </button>
             <button
-              className={`px-6 py-3 rounded-xl font-semibold border-2 transition-all duration-200 ${
+              className={`px-3 md:px-6 py-2 md:py-3 rounded-xl font-semibold border-2 transition-all duration-200 text-sm md:text-base ${
                 vista === "agenda" 
                   ? "bg-amber-200 border-amber-400 text-amber-900 shadow-md" 
                   : "bg-white border-amber-200 text-amber-700 hover:bg-amber-50"
@@ -430,35 +451,37 @@ const Calendario = () => {
             >
               Agenda
             </button>
-            <button
-              onClick={() => abrirModalNuevo()}
-              className="bg-amber-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-            >
-              + Nuevo Evento
-            </button>
+            {puedeEditar && (
+              <button
+                onClick={() => abrirModalNuevo()}
+                className="bg-amber-600 text-white px-3 md:px-6 py-2 md:py-3 rounded-xl font-semibold hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm md:text-base"
+              >
+                + Nuevo Evento
+              </button>
+            )}
           </div>
         </div>
         
         {/* Navegación */}
-        <div className="flex items-center justify-center gap-4 mb-4">
+        <div className="flex items-center justify-center gap-2 md:gap-4 mb-4">
           <button
             onClick={irAnterior}
-            className="p-3 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            className="p-2 md:p-3 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-lg md:text-xl"
             title={vista === "week" ? "Semana anterior" : vista === "month" ? "Mes anterior" : "Semana anterior"}
           >
             ←
           </button>
           
-          <button
-            onClick={irHoy}
-            className="px-6 py-2 rounded-xl bg-amber-600 text-white font-semibold hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-          >
+                  <button
+          onClick={irHoy}
+          className="px-4 md:px-6 py-2 rounded-xl bg-amber-600 text-white font-semibold hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-sm md:text-base"
+        >
             Hoy
           </button>
           
           <button
             onClick={irSiguiente}
-            className="p-3 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            className="p-2 md:p-3 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 text-lg md:text-xl"
             title={vista === "week" ? "Semana siguiente" : vista === "month" ? "Mes siguiente" : "Semana siguiente"}
           >
             →
@@ -467,7 +490,7 @@ const Calendario = () => {
         
         {/* Título de la fecha actual */}
         <div className="text-center">
-          <h3 className="text-xl font-semibold text-amber-800">
+          <h3 className="text-lg md:text-xl font-bold text-amber-800">
             {vista === "week" 
               ? `${format(fechaActual, "d 'de' MMMM", { locale: es })} - ${format(addWeeks(fechaActual, 1), "d 'de' MMMM", { locale: es })}`
               : vista === "month"
@@ -479,13 +502,40 @@ const Calendario = () => {
       </div>
       
       {/* Calendario responsive y scrollable en móvil */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-x-auto w-full pb-20">
+      <div className="bg-white rounded-2xl shadow-xl overflow-x-auto w-full pb-20 border border-amber-200">
         <style>
           {Object.entries(calendarStyles).map(([selector, styles]) => 
             `${selector} { ${Object.entries(styles).map(([prop, value]) => `${prop}: ${value}`).join('; ')} }`
           ).join('\n')}
+          
+          {`
+            @media (max-width: 768px) {
+              .rbc-calendar {
+                font-size: 12px !important;
+              }
+              .rbc-header {
+                padding: 8px 4px !important;
+                font-size: 12px !important;
+              }
+              .rbc-toolbar {
+                padding: 12px !important;
+                margin-bottom: 16px !important;
+              }
+              .rbc-toolbar-label {
+                font-size: 18px !important;
+              }
+              .rbc-event {
+                font-size: 10px !important;
+                padding: 2px 4px !important;
+              }
+              .rbc-btn-group button {
+                padding: 6px 12px !important;
+                font-size: 12px !important;
+              }
+            }
+          `}
         </style>
-        <div className="min-w-[600px] md:min-w-0">
+        <div className="min-w-[800px] sm:min-w-[600px] md:min-w-0">
           <Calendar
             localizer={localizer}
             events={eventos}
@@ -497,7 +547,7 @@ const Calendario = () => {
             onView={setVista}
             date={fechaActual}
             onNavigate={setFechaActual}
-            selectable
+            selectable={puedeEditar}
             onSelectSlot={handleSelect}
             onSelectEvent={handleSelectEvent}
             toolbar={false}
@@ -521,6 +571,9 @@ const Calendario = () => {
               event: "Evento",
             }}
             culture="es"
+            components={{
+              noEventsInRange: NoEventsMessage
+            }}
           />
         </div>
       </div>
@@ -528,10 +581,18 @@ const Calendario = () => {
       {/* Modal para crear/editar eventos */}
       {modalAbierto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl transform transition-all">
-            <h3 className="text-2xl font-bold text-amber-900 mb-6">
-              {eventoEditando ? "Editar Evento" : "Nuevo Evento"}
-            </h3>
+          <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl transform transition-all border border-amber-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-amber-900">
+                {eventoEditando ? "Editar Evento" : "Nuevo Evento"}
+              </h3>
+              <button
+                onClick={cerrarModal}
+                className="p-2 text-amber-600 hover:text-amber-800 hover:bg-amber-100 rounded-lg transition-colors"
+              >
+                ✕
+              </button>
+            </div>
             
             <div className="space-y-6">
               <div>
@@ -643,28 +704,62 @@ const Calendario = () => {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-8">
-              <button
-                onClick={guardarEvento}
-                className="flex-1 bg-amber-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-              >
-                {eventoEditando ? "Actualizar" : "Crear"}
-              </button>
+            <div className="flex gap-3 pt-4">
+              {eventoEditando && (
+                <button
+                  onClick={() => confirmarEliminacion(eventoEditando)}
+                  className="flex-1 px-6 py-3 bg-gray-500 text-white rounded-xl font-semibold hover:bg-gray-600 transition-colors"
+                >
+                  Cancelar evento
+                </button>
+              )}
               <button
                 onClick={cerrarModal}
-                className="bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
+                className="flex-1 px-6 py-3 border-2 border-amber-200 text-amber-700 rounded-xl font-semibold hover:bg-amber-50 transition-colors"
               >
                 Cancelar
               </button>
-              {eventoEditando && (
-                <button
-                  onClick={() => eliminarEvento(eventoEditando)}
-                  className="bg-red-500 text-white py-3 px-4 rounded-xl font-semibold hover:bg-red-600 transition-all duration-200 shadow-md hover:shadow-lg"
-                  title="Eliminar evento"
-                >
-                  🗑️
-                </button>
-              )}
+              <button
+                onClick={guardarEvento}
+                className="flex-1 px-6 py-3 bg-amber-600 text-white rounded-xl font-semibold hover:bg-amber-700 transition-colors"
+              >
+                {eventoEditando ? "Actualizar" : "Crear"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación */}
+      {mostrarConfirmacion && eventoAEliminar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl transform transition-all border border-amber-200">
+            <div className="text-center mb-6">
+              <div className="text-6xl mb-4">📅</div>
+              <h3 className="text-2xl font-bold text-amber-900 mb-2">
+                Confirmar cancelación
+              </h3>
+              <p className="text-amber-700 text-lg">
+                ¿Deseas cancelar el evento <strong>"{eventoAEliminar.title}"</strong>?
+              </p>
+            </div>
+            
+            <div className="flex gap-4">
+              <button
+                onClick={() => {
+                  setMostrarConfirmacion(false);
+                  setEventoAEliminar(null);
+                }}
+                className="flex-1 px-6 py-3 border-2 border-amber-200 text-amber-700 rounded-xl font-semibold hover:bg-amber-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={eliminarEvento}
+                className="flex-1 px-6 py-3 bg-gray-600 text-white rounded-xl font-semibold hover:bg-gray-700 transition-colors"
+              >
+                Confirmar
+              </button>
             </div>
           </div>
         </div>

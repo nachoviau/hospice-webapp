@@ -42,13 +42,13 @@ const ListaHuespedes = ({ refrescar }) => {
 
   if (cargando) return <p className="text-amber-700">Cargando huéspedes...</p>;
 
-  if (error) return <p className="text-red-700 bg-red-100 p-4 rounded">Error: {error}</p>;
+  if (error) return <p className="text-amber-700 bg-amber-100 p-4 rounded">Error: {error}</p>;
 
   return (
     <div className="flex flex-col gap-6">
       {huespedes.length === 0 ? (
         <div className="text-center">
-          <p className="text-amber-700 text-lg">No hay huéspedes cargados.</p>
+                        <p className="text-amber-700 text-lg">Aún no hay huéspedes registrados.</p>
           <p className="text-amber-600 text-sm mt-2">Total de documentos: {huespedes.length}</p>
         </div>
       ) : (

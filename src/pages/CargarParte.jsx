@@ -48,7 +48,7 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
           setTexto("");
         }
       } catch (err) {
-        setError("Error al cargar el parte: " + err.message);
+        setError("No se pudo cargar el parte: " + err.message);
       } finally {
         setCargando(false);
       }
@@ -82,14 +82,14 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
       setMensaje("¡Parte guardado con éxito!");
       if (onClose) setTimeout(onClose, 500);
     } catch (err) {
-      setError("Error al guardar el parte: " + err.message);
+      setError("No se pudo guardar el parte: " + err.message);
     } finally {
       setGuardando(false);
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md max-w-2xl mx-auto mt-0">
+    <div className="bg-white p-6 rounded-xl shadow-xl max-w-2xl mx-auto mt-0 border border-amber-200">
       <h2 className="text-2xl font-bold mb-4 text-amber-900">Cargar parte diario</h2>
       <div className="flex flex-col md:flex-row gap-4 mb-4">
         <div>
@@ -114,7 +114,7 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
           </select>
         </div>
       </div>
-      {error && <p className="text-red-700 bg-red-100 rounded p-2 text-center mb-2">{error}</p>}
+      {error && <p className="text-amber-700 bg-amber-100 rounded p-2 text-center mb-2">{error}</p>}
       {mensaje && <p className="text-green-700 bg-green-100 rounded p-2 text-center mb-2">{mensaje}</p>}
       {cargando ? (
         <p className="text-amber-700">Cargando parte...</p>
@@ -130,7 +130,7 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
           />
           <button
             onClick={guardarParte}
-            className="bg-amber-300 hover:bg-amber-400 text-amber-900 font-bold px-6 py-3 rounded-xl shadow transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-3 rounded-xl shadow transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             disabled={guardando}
             aria-label="Guardar parte"
           >

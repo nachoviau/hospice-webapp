@@ -1,11 +1,14 @@
 // src/components/Layout.jsx
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { FiUsers, FiCalendar, FiFileText, FiLogOut, FiCheckSquare } from "react-icons/fi";
+import ReadOnlyIndicator from "./ReadOnlyIndicator";
+import UpdateNotification from "./UpdateNotification";
 
 const navItems = [
   { to: "/huespedes", label: "Húspedes", icon: <FiUsers className="inline text-2xl" /> },
-  { to: "/calendario", label: "Calendario", icon: <FiCalendar className="inline text-2xl" /> },
-  { to: "/tareas", label: "Tareas", icon: <FiCheckSquare className="inline text-2xl" /> },
+  // TEMPORAL: Ocultado para presentación - Descomentar para volver a mostrar
+  // { to: "/calendario", label: "Calendario", icon: <FiCalendar className="inline text-2xl" /> },
+  // { to: "/tareas", label: "Tareas", icon: <FiCheckSquare className="inline text-2xl" /> },
   { to: "/partes", label: "Partes diarios", icon: <FiFileText className="inline text-2xl" /> },
 ];
 
@@ -20,7 +23,11 @@ const Layout = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#fdf6ec] font-sans">
+    <div className="min-h-screen flex bg-[#fbead1] md:bg-[#f2e8d9] font-sans">
+      {/* Indicador de modo solo lectura */}
+      <ReadOnlyIndicator />
+      <UpdateNotification />
+      
       {/* Sidebar solo en desktop */}
       <aside className="hidden md:flex w-[260px] shrink-0 bg-[#f7ecd7] flex-col py-8 px-6 shadow-md rounded-tr-3xl rounded-br-3xl h-screen">
         <div className="mb-12">
@@ -57,7 +64,7 @@ const Layout = () => {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 p-8 bg-[#fdf6ec] min-h-screen pb-20 md:pb-0">
+      <main className="flex-1 p-8 bg-[#fbead1] md:bg-[#f2e8d9] min-h-screen pb-20 md:pb-0">
         <Outlet />
       </main>
 

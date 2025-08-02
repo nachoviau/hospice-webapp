@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import CargarParte from "./CargarParte";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
@@ -12,6 +13,7 @@ const TURNOS = [
 ];
 
 const Partes = () => {
+  const { puedeEditar } = useAuth();
   const [fecha, setFecha] = useState(() => {
     const hoy = new Date();
     return hoy.toISOString().split("T")[0];
@@ -26,6 +28,7 @@ const Partes = () => {
   const [errorResumen, setErrorResumen] = useState("");
 
   const abrirModal = (turno = null) => {
+    if (!puedeEditar) return; // No permitir editar si es usuario anónimo
     setTurnoEditar(turno);
     setModalAbierto(true);
   };
@@ -64,6 +67,8 @@ const Partes = () => {
   }, [fecha, modalAbierto, generandoResumen]);
 
   const generarResumen = async () => {
+    if (!puedeEditar) return; // No permitir generar resumen si es usuario anónimo
+    
     setGenerandoResumen(true);
     setErrorResumen("");
     try {
@@ -121,18 +126,20 @@ const Partes = () => {
               />
             </div>
             
-            <button
-              onClick={() => abrirModal(null)}
-              className="bg-amber-600 text-white px-8 py-3 rounded-xl hover:bg-amber-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold flex items-center gap-2"
-            >
-              <FiPlus className="w-5 h-5" />
-              Cargar Parte
-            </button>
+            {puedeEditar && (
+              <button
+                onClick={() => abrirModal(null)}
+                className="bg-amber-600 text-white px-8 py-3 rounded-xl hover:bg-amber-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold flex items-center gap-2"
+              >
+                <FiPlus className="w-5 h-5" />
+                Cargar Parte
+              </button>
+            )}
           </div>
 
           {/* Estadísticas */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+            <div className="bg-amber-50 rounded-xl p-4 border border-amber-300 shadow-md">
               <div className="flex items-center gap-3">
                 <FiFileText className="text-2xl text-amber-600" />
                 <div>
@@ -142,7 +149,7 @@ const Partes = () => {
               </div>
             </div>
             
-            <div className="bg-orange-50 rounded-xl p-4 border border-orange-200">
+            <div className="bg-orange-50 rounded-xl p-4 border border-orange-300 shadow-md">
               <div className="flex items-center gap-3">
                 <FiClock className="text-2xl text-orange-600" />
                 <div>
@@ -154,7 +161,7 @@ const Partes = () => {
               </div>
             </div>
             
-            <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+            <div className="bg-purple-50 rounded-xl p-4 border border-purple-300 shadow-md">
               <div className="flex items-center gap-3">
                 <FiCheckCircle className="text-2xl text-purple-600" />
                 <div>
@@ -169,7 +176,7 @@ const Partes = () => {
         </div>
 
         {/* Botón para generar resumen */}
-        {!resumenYaExiste && partesCompletos && (
+        {!resumenYaExiste && partesCompletos && puedeEditar && (
           <div className="mb-6">
             <button
               onClick={generarResumen}
@@ -192,156 +199,164 @@ const Partes = () => {
         )}
 
         {errorResumen && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                      <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
             <div className="flex items-center gap-2">
-              <FiAlertCircle className="text-red-600 w-5 h-5" />
-              <p className="text-red-700 font-medium">{errorResumen}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Resumen del día */}
-        {partes.resumen?.texto && (
-          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-2xl shadow-lg p-6 border border-yellow-200 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="text-3xl">📊</div>
-                <div>
-                  <h3 className="text-xl font-bold text-yellow-800">Resumen del Día</h3>
-                  <p className="text-yellow-600 text-sm">Resumen combinado automáticamente</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setParteVer({ turno: "Resumen del día", texto: partes.resumen.texto })}
-                className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors font-semibold flex items-center gap-2"
-              >
-                <FiEye className="w-4 h-4" />
-                Ver Completo
-              </button>
-            </div>
-            <div className="bg-white rounded-xl p-4 border border-yellow-200">
-              <p className="text-yellow-800 line-clamp-3">
-                {partes.resumen.texto.substring(0, 200)}...
-              </p>
-            </div>
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-            <div className="flex items-center gap-2">
-              <FiAlertCircle className="text-red-600 w-5 h-5" />
-              <p className="text-red-700 font-medium">{error}</p>
+                              <FiAlertCircle className="text-amber-600 w-5 h-5" />
+                <p className="text-amber-700 font-medium">{errorResumen}</p>
             </div>
           </div>
         )}
 
         {/* Lista de turnos */}
-        {cargando ? (
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-8 h-8 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-amber-700 font-medium">Cargando partes...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TURNOS.map(turno => (
-              <div key={turno.value} className="bg-white rounded-2xl shadow-xl p-6 border border-amber-100 hover:shadow-2xl transition-all duration-200">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="text-3xl">{turno.icon}</div>
-                    <div>
-                      <h3 className="text-xl font-bold text-amber-800">{turno.label}</h3>
-                      <p className="text-amber-600 text-sm">Turno</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {TURNOS.map((turno) => {
+            const parte = partes[turno.value];
+            const tieneTexto = parte?.texto;
+            
+            return (
+              <div
+                key={turno.value}
+                className={`bg-white rounded-2xl shadow-xl overflow-hidden border-2 transition-all duration-200 ${
+                  tieneTexto 
+                    ? `border-${turno.color}-300 hover:border-${turno.color}-400` 
+                    : "border-gray-300"
+                }`}
+              >
+                <div className={`p-6 ${tieneTexto ? `bg-${turno.color}-50` : "bg-gray-50"}`}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">{turno.icon}</span>
+                      <h3 className={`text-xl font-bold ${tieneTexto ? `text-${turno.color}-800` : "text-gray-600"}`}>
+                        {turno.label}
+                      </h3>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      tieneTexto 
+                        ? `bg-${turno.color}-200 text-${turno.color}-800` 
+                        : "bg-gray-200 text-gray-600"
+                    }`}>
+                      {tieneTexto ? "Cargado" : "Pendiente"}
                     </div>
                   </div>
-                  {partes[turno.value]?.texto && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => abrirVer(turno.label, partes[turno.value].texto)}
-                        className="bg-amber-100 text-amber-700 p-2 rounded-lg hover:bg-amber-200 transition-colors"
-                        title="Ver parte"
-                      >
-                        <FiEye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => abrirModal(turno.value)}
-                        className="bg-orange-100 text-orange-700 p-2 rounded-lg hover:bg-orange-200 transition-colors"
-                        title="Editar parte"
-                      >
-                        <FiEdit className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
+                  
+                  <div className="space-y-3">
+                    {tieneTexto ? (
+                      <>
+                        <div className="bg-white rounded-xl p-4 border border-gray-300 shadow-sm">
+                          <p className="text-gray-700 text-sm line-clamp-3">
+                            {parte.texto.substring(0, 150)}...
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => abrirVer(turno.label, parte.texto)}
+                            className="flex-1 bg-blue-100 text-blue-700 py-2 px-4 rounded-lg hover:bg-blue-200 transition-colors font-semibold flex items-center justify-center gap-2"
+                          >
+                            <FiEye className="w-4 h-4" />
+                            Ver
+                          </button>
+                          {puedeEditar && (
+                            <button
+                              onClick={() => abrirModal(turno.value)}
+                              className="flex-1 bg-amber-100 text-amber-700 py-2 px-4 rounded-lg hover:bg-amber-200 transition-colors font-semibold flex items-center justify-center gap-2"
+                            >
+                              <FiEdit className="w-4 h-4" />
+                              Editar
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="text-4xl mb-3 text-gray-400">📝</div>
+                        <p className="text-gray-500 font-medium">Aún no hay parte cargado para este turno</p>
+                        <p className="text-gray-400 text-sm mt-2">Usa el botón "Cargar Parte" para agregar contenido</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                
-                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-                  {partes[turno.value]?.texto ? (
-                    <div className="flex items-center gap-2 text-amber-700">
-                      <FiCheckCircle className="w-5 h-5 text-green-600" />
-                      <span className="font-medium">Parte cargado</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-amber-600">
-                      <FiAlertCircle className="w-5 h-5" />
-                      <span className="font-medium">Sin parte cargado</span>
-                    </div>
-                  )}
-                </div>
-
-                {!partes[turno.value]?.texto && (
-                  <button
-                    onClick={() => abrirModal(turno.value)}
-                    className="w-full mt-4 bg-amber-600 text-white py-3 px-4 rounded-xl hover:bg-amber-700 transition-colors font-semibold flex items-center justify-center gap-2"
-                  >
-                    <FiPlus className="w-4 h-4" />
-                    Cargar Parte
-                  </button>
-                )}
               </div>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
 
-        {/* Modal para cargar/editar parte */}
-        {modalAbierto && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 relative w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-              <button
-                className="absolute top-4 right-4 text-2xl text-amber-600 hover:text-amber-800 transition-colors p-2 hover:bg-amber-100 rounded-full"
-                onClick={cerrarModal}
-                aria-label="Cerrar"
-              >
-                <FiX className="w-6 h-6" />
-              </button>
-              <CargarParte fechaInicial={fecha} turnoInicial={turnoEditar} onClose={cerrarModal} />
-            </div>
-          </div>
-        )}
-
-        {/* Modal para ver parte o resumen */}
-        {parteVer && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 relative w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-              <button
-                className="absolute top-4 right-4 text-2xl text-amber-600 hover:text-amber-800 transition-colors p-2 hover:bg-amber-100 rounded-full"
-                onClick={cerrarVer}
-                aria-label="Cerrar"
-              >
-                <FiX className="w-6 h-6" />
-              </button>
-              <div className="mb-6">
-                <h3 className="text-2xl font-bold text-amber-800 mb-2">{parteVer.turno}</h3>
-                <div className="w-16 h-1 bg-amber-600 rounded-full"></div>
+        {/* Resumen del día */}
+        {resumenYaExiste && (
+          <div className="bg-white rounded-2xl shadow-xl p-6 border border-purple-300">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">📊</div>
+                <h3 className="text-2xl font-bold text-purple-800">Resumen del Día</h3>
               </div>
-              <div className="bg-amber-50 rounded-xl p-6 border border-amber-200 max-h-[60vh] overflow-y-auto">
-                <div className="whitespace-pre-line text-amber-800 text-lg leading-relaxed">
-                  {parteVer.texto}
-                </div>
+              <div className="px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
+                Generado por IA
               </div>
             </div>
+            
+            <div className="bg-purple-50 rounded-xl p-6 border border-purple-300 shadow-sm">
+              <p className="text-purple-800 leading-relaxed whitespace-pre-wrap">
+                {partes.resumen.texto}
+              </p>
+            </div>
+            
+            {partes.resumen.fechaGeneracion && (
+              <div className="mt-4 text-sm text-purple-600">
+                Generado el: {partes.resumen.fechaGeneracion.toDate().toLocaleString('es-ES')}
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Modal para cargar/editar parte */}
+      {modalAbierto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-4xl mx-4 shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto border border-amber-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-amber-900">
+                {turnoEditar ? `Editar Parte - ${TURNOS.find(t => t.value === turnoEditar)?.label}` : "Cargar Nuevo Parte"}
+              </h3>
+              <button
+                onClick={cerrarModal}
+                className="p-2 text-amber-600 hover:text-amber-800 hover:bg-amber-100 rounded-lg transition-colors"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <CargarParte 
+              fecha={fecha} 
+              turno={turnoEditar} 
+              onSuccess={cerrarModal}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Modal para ver parte */}
+      {parteVer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-4xl mx-4 shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto border border-amber-200">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-amber-900">
+                Parte - {parteVer.turno}
+              </h3>
+              <button
+                onClick={cerrarVer}
+                className="p-2 text-amber-600 hover:text-amber-800 hover:bg-amber-100 rounded-lg transition-colors"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="bg-amber-50 rounded-xl p-6 border border-amber-200">
+              <p className="text-amber-800 leading-relaxed whitespace-pre-wrap">
+                {parteVer.texto}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import { useAuth } from "../contexts/AuthContext";
 import { FiPlus, FiCheck, FiTrash2, FiEdit3, FiX } from "react-icons/fi";
 
 const Tareas = () => {
+  const { puedeEditar } = useAuth();
   const [tareas, setTareas] = useState([]);
   const [mostrarCompletadas, setMostrarCompletadas] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [editando, setEditando] = useState(null);
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [tareaAEliminar, setTareaAEliminar] = useState(null);
   const [formData, setFormData] = useState({
     titulo: "",
     descripcion: "",
@@ -35,6 +39,8 @@ const Tareas = () => {
   }, []);
 
   const abrirModal = (tarea = null) => {
+    if (!puedeEditar) return; // No permitir editar si es usuario anónimo
+    
     if (tarea) {
       setEditando(tarea);
       setFormData({
@@ -87,6 +93,8 @@ const Tareas = () => {
   };
 
   const toggleCompletada = async (tarea) => {
+    if (!puedeEditar) return; // No permitir cambiar estado si es usuario anónimo
+    
     try {
       const nuevaCompletada = !tarea.completada;
       await updateDoc(doc(db, "tareas", tarea.id), {
@@ -103,10 +111,20 @@ const Tareas = () => {
     }
   };
 
-  const eliminarTarea = async (tarea) => {
+  const confirmarEliminacion = (tarea) => {
+    if (!puedeEditar) return; // No permitir eliminar si es usuario anónimo
+    setTareaAEliminar(tarea);
+    setMostrarConfirmacion(true);
+  };
+
+  const eliminarTarea = async () => {
+    if (!tareaAEliminar) return;
+    
     try {
-      await deleteDoc(doc(db, "tareas", tarea.id));
-      setTareas(prev => prev.filter(t => t.id !== tarea.id));
+      await deleteDoc(doc(db, "tareas", tareaAEliminar.id));
+      setTareas(prev => prev.filter(t => t.id !== tareaAEliminar.id));
+      setMostrarConfirmacion(false);
+      setTareaAEliminar(null);
     } catch (error) {
       console.error("Error al eliminar tarea:", error);
     }
@@ -125,13 +143,15 @@ const Tareas = () => {
       <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-3xl font-bold text-amber-900">Tareas Pendientes</h2>
-          <button
-            onClick={() => abrirModal()}
-            className="flex items-center gap-2 bg-amber-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-          >
-            <FiPlus className="text-xl" />
-            Nueva Tarea
-          </button>
+          {puedeEditar && (
+            <button
+              onClick={() => abrirModal()}
+                              className="flex items-center gap-2 bg-amber-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            >
+              <FiPlus className="text-xl" />
+              Nueva Tarea
+            </button>
+          )}
         </div>
 
         {/* Estadísticas */}
@@ -172,7 +192,7 @@ const Tareas = () => {
       </div>
 
       {/* Lista de tareas */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-amber-200">
         {tareasFiltradas.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">
@@ -187,7 +207,7 @@ const Tareas = () => {
                 : "¡Crea tu primera tarea para empezar!"
               }
             </p>
-            {!mostrarCompletadas && (
+            {!mostrarCompletadas && puedeEditar && (
               <button
                 onClick={() => abrirModal()}
                 className="bg-amber-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
@@ -208,11 +228,12 @@ const Tareas = () => {
                 <div className="flex items-start gap-4">
                   <button
                     onClick={() => toggleCompletada(tarea)}
+                    disabled={!puedeEditar}
                     className={`flex-shrink-0 w-6 h-6 rounded-full border-2 transition-all duration-200 ${
                       tarea.completada
                         ? "bg-green-500 border-green-500 text-white"
                         : "border-amber-300 hover:border-amber-500"
-                    }`}
+                    } ${!puedeEditar ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     {tarea.completada && <FiCheck className="w-full h-full p-0.5" />}
                   </button>
@@ -242,22 +263,24 @@ const Tareas = () => {
                     </div>
                   </div>
                   
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => abrirModal(tarea)}
-                      className="p-2 text-amber-600 hover:text-amber-800 hover:bg-amber-100 rounded-lg transition-colors"
-                      title="Editar"
-                    >
-                      <FiEdit3 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => eliminarTarea(tarea)}
-                      className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 rounded-lg transition-colors"
-                      title="Eliminar"
-                    >
-                      <FiTrash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {puedeEditar && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => abrirModal(tarea)}
+                        className="p-2 text-amber-600 hover:text-amber-800 hover:bg-amber-100 rounded-lg transition-colors"
+                        title="Editar"
+                      >
+                        <FiEdit3 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => confirmarEliminacion(tarea)}
+                        className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                        title="Dar de baja"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -268,7 +291,7 @@ const Tareas = () => {
       {/* Modal para crear/editar tarea */}
       {modalAbierto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl transform transition-all">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl transform transition-all border border-amber-200">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-amber-900">
                 {editando ? "Editar Tarea" : "Nueva Tarea"}
@@ -302,40 +325,73 @@ const Tareas = () => {
                 <textarea
                   value={formData.descripcion}
                   onChange={(e) => setFormData(prev => ({ ...prev, descripcion: e.target.value }))}
-                  className="w-full px-4 py-3 border-2 border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all"
-                  rows="3"
-                  placeholder="Descripción (opcional)"
+                  className="w-full px-4 py-3 border-2 border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all resize-none"
+                  rows="4"
+                  placeholder="Descripción de la tarea"
                 />
               </div>
 
-              {editando && (
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="completada"
-                    checked={formData.completada}
-                    onChange={(e) => setFormData(prev => ({ ...prev, completada: e.target.checked }))}
-                    className="mr-3 w-5 h-5 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
-                  />
-                  <label htmlFor="completada" className="text-sm font-semibold text-amber-800">
-                    Marcar como completada
-                  </label>
-                </div>
-              )}
-            </div>
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="completada"
+                  checked={formData.completada}
+                  onChange={(e) => setFormData(prev => ({ ...prev, completada: e.target.checked }))}
+                  className="w-5 h-5 text-amber-600 border-amber-300 rounded focus:ring-amber-500"
+                />
+                <label htmlFor="completada" className="text-sm font-semibold text-amber-800">
+                  Marcar como completada
+                </label>
+              </div>
 
-            <div className="flex gap-3 mt-8">
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={cerrarModal}
+                  className="flex-1 px-6 py-3 border-2 border-amber-200 text-amber-700 rounded-xl font-semibold hover:bg-amber-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={guardarTarea}
+                  className="flex-1 px-6 py-3 bg-amber-600 text-white rounded-xl font-semibold hover:bg-amber-700 transition-colors"
+                >
+                  {editando ? "Actualizar" : "Crear"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación */}
+      {mostrarConfirmacion && tareaAEliminar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl transform transition-all border border-amber-200">
+            <div className="text-center mb-6">
+              <div className="text-6xl mb-4">📝</div>
+              <h3 className="text-2xl font-bold text-amber-900 mb-2">
+                Confirmar baja
+              </h3>
+              <p className="text-amber-700 text-lg">
+                ¿Deseas dar de baja la tarea <strong>"{tareaAEliminar.titulo}"</strong> del sistema?
+              </p>
+            </div>
+            
+            <div className="flex gap-4">
               <button
-                onClick={guardarTarea}
-                className="flex-1 bg-amber-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-              >
-                {editando ? "Actualizar" : "Crear"}
-              </button>
-              <button
-                onClick={cerrarModal}
-                className="bg-gray-200 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-300 transition-all duration-200"
+                onClick={() => {
+                  setMostrarConfirmacion(false);
+                  setTareaAEliminar(null);
+                }}
+                className="flex-1 px-6 py-3 border-2 border-amber-200 text-amber-700 rounded-xl font-semibold hover:bg-amber-50 transition-colors"
               >
                 Cancelar
+              </button>
+              <button
+                onClick={eliminarTarea}
+                className="flex-1 px-6 py-3 bg-gray-600 text-white rounded-xl font-semibold hover:bg-gray-700 transition-colors"
+              >
+                Confirmar
               </button>
             </div>
           </div>
