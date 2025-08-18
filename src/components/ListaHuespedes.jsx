@@ -58,7 +58,7 @@ const ListaHuespedes = ({ refrescar }) => {
             <button
               key={h.id}
               onClick={() => navigate(`/huespedes/${h.id}`)}
-              className="bg-orange-50 rounded-2xl shadow-md hover:shadow-lg p-8 border border-orange-200 text-left text-xl font-semibold text-green-800 hover:bg-orange-100 transition-all duration-300 transform hover:-translate-y-1 select-none"
+              className="bg-green-50 rounded-2xl shadow-md hover:shadow-lg p-8 border border-green-200 text-left text-xl font-semibold text-green-800 hover:bg-green-100 transition-all duration-300 transform hover:-translate-y-1 select-none"
             >
               {h.nombre}
             </button>

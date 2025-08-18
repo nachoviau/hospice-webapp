@@ -87,14 +87,14 @@ const Partes = () => {
     setGenerandoResumen(true);
     setErrorResumen("");
     try {
-      const resumenTexto = await generateSummary(
-        fecha,
-        partes["mañana"]?.texto || "",
-        partes["tarde"]?.texto || "",
-        partes["noche"]?.texto || ""
-      );
+              const resumenTexto = await generateSummary(
+          fecha,
+          partes["mañana"]?.texto || "",
+          partes["tarde"]?.texto || "",
+          partes["noche"]?.texto || ""
+        );
 
-      const docRef = doc(db, "partesDiarios", fecha);
+        const docRef = doc(db, "partesDiarios", fecha);
       await updateDoc(docRef, {
         resumen: { texto: resumenTexto, generadoPorIA: true, fechaGeneracion: new Date() }
       });
@@ -116,7 +116,7 @@ const Partes = () => {
   const partesCargados = Object.values(TURNOS).filter(t => partes[t.value]?.texto).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-200 via-green-300 to-yellow-200 p-6 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-stone-50 to-gray-100 p-6 pb-20">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -150,6 +150,7 @@ const Partes = () => {
                 Cargar Parte
               </button>
             )}
+
           </div>
 
           {/* Estadísticas */}
@@ -165,29 +166,6 @@ const Partes = () => {
             </div>
           </div>
         </div>
-
-        {/* Botón para generar resumen */}
-        {!resumenYaExiste && partesCompletos && puedeEditar && (
-          <div className="mb-6">
-            <button
-              onClick={generarResumen}
-              disabled={generandoResumen}
-              className="w-full bg-gradient-to-r from-green-700 to-purple-600 text-white py-4 px-6 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 border-2 border-green-900 select-none"
-            >
-              {generandoResumen ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Generando resumen...
-                </>
-              ) : (
-                <>
-                  <FiFileText className="w-5 h-5" />
-                  Combinar Reportes del Día
-                </>
-              )}
-            </button>
-          </div>
-        )}
 
         {errorResumen && (
                       <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
@@ -209,21 +187,21 @@ const Partes = () => {
                 key={turno.value}
                 className={`bg-white rounded-2xl shadow-xl overflow-hidden border-2 transition-all duration-200 ${
                   tieneTexto 
-                    ? `border-${turno.color}-300 hover:border-${turno.color}-400` 
+                    ? "border-green-300 hover:border-green-400" 
                     : "border-gray-300"
                 }`}
               >
-                <div className={`p-6 ${tieneTexto ? `bg-${turno.color}-50` : "bg-gray-50"}`}>
+                <div className={`p-6 ${tieneTexto ? "bg-green-50" : "bg-gray-50"}`}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-3xl">{turno.icon}</span>
-                      <h3 className={`text-xl font-bold ${tieneTexto ? `text-${turno.color}-800` : "text-gray-600"}`}>
+                      <h3 className={`text-xl font-bold ${tieneTexto ? "text-green-800" : "text-gray-600"}`}>
                         {turno.label}
                       </h3>
                     </div>
                     <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
                       tieneTexto 
-                        ? `bg-${turno.color}-200 text-${turno.color}-800` 
+                        ? "bg-green-200 text-green-800" 
                         : "bg-gray-200 text-gray-600"
                     }`}>
                       {tieneTexto ? "Cargado" : "Pendiente"}
@@ -271,6 +249,29 @@ const Partes = () => {
           })}
         </div>
 
+        {/* Botón para generar resumen */}
+        {!resumenYaExiste && partesCompletos && puedeEditar && (
+          <div className="mb-6">
+            <button
+              onClick={generarResumen}
+              disabled={generandoResumen}
+              className="w-full bg-gradient-to-r from-green-700 to-purple-600 text-white py-4 px-6 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 border-2 border-green-900 select-none"
+            >
+              {generandoResumen ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Generando resumen...
+                </>
+              ) : (
+                <>
+                  <FiFileText className="w-5 h-5" />
+                  Combinar Reportes del Día
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
         {/* Resumen del día */}
         {resumenYaExiste && (
           <div className="bg-white rounded-2xl shadow-xl p-6 border border-purple-300">
@@ -315,10 +316,10 @@ const Partes = () => {
               </button>
             </div>
             
-            <CargarParte 
-              fechaInicial={fecha} 
-              turnoInicial={turnoEditar} 
-              onClose={cerrarModal}
+                          <CargarParte 
+                fechaInicial={fecha} 
+                turnoInicial={turnoEditar} 
+                onClose={cerrarModal}
             />
           </div>
         </div>
