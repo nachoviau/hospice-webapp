@@ -87,27 +87,27 @@ const DetalleHuesped = () => {
     }
   };
 
-  if (cargando) return <p className="text-amber-700">Cargando...</p>;
-  if (error) return <p className="text-amber-700 bg-amber-100 rounded p-2 text-center">{error}</p>;
+  if (cargando) return <p className="text-green-700 font-medium">Cargando...</p>;
+  if (error) return <p className="text-green-700 bg-orange-100 rounded-2xl p-4 text-center">{error}</p>;
   if (!huesped) return null;
 
   return (
-    <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-xl p-8 mt-8 border border-amber-200">
-      <button onClick={() => navigate(-1)} className="mb-6 text-amber-700 hover:underline text-base">&larr; Volver</button>
-      <h2 className="text-3xl font-bold text-amber-900 mb-6">{huesped.nombre}</h2>
+    <div className="max-w-2xl mx-auto bg-orange-50 rounded-3xl shadow-lg p-10 mt-8 border border-orange-200">
+      <button onClick={() => navigate(-1)} className="mb-8 text-green-700 hover:text-green-800 hover:bg-green-50 px-4 py-2 rounded-xl transition-all duration-200 text-base font-medium select-none">&larr; Volver</button>
+      <h2 className="text-4xl font-bold text-green-800 mb-8 text-center">{huesped.nombre}</h2>
       {editando ? (
         <form onSubmit={e => { e.preventDefault(); guardarEdicion(); }} className="flex flex-col gap-4">
           <div>
-            <label className="block text-amber-900 font-medium mb-1">Nombre:</label>
-            <input name="nombre" value={editData.nombre} onChange={handleEditChange} required className="w-full rounded-lg border border-amber-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 text-lg" />
+            <label className="block text-green-800 font-semibold mb-2">Nombre:</label>
+            <input name="nombre" value={editData.nombre} onChange={handleEditChange} required className="w-full rounded-xl border border-orange-300 px-5 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-lg bg-white shadow-sm" />
           </div>
           <div>
-            <label className="block text-amber-900 font-medium mb-1">Info. huésped:</label>
-            <textarea name="info_huesped" value={editData.info_huesped} onChange={handleEditChange} rows="3" className="w-full rounded-lg border border-amber-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 text-lg" placeholder="Información general del huésped..." />
+            <label className="block text-green-800 font-semibold mb-2">Info. huésped:</label>
+            <textarea name="info_huesped" value={editData.info_huesped} onChange={handleEditChange} rows="4" className="w-full rounded-xl border border-orange-300 px-5 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-lg bg-white shadow-sm" placeholder="Información general del huésped..." />
           </div>
           <div>
-            <label className="block text-amber-900 font-medium mb-1">Gustos:</label>
-            <textarea name="gustos" value={editData.gustos} onChange={handleEditChange} rows="3" className="w-full rounded-lg border border-amber-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 text-lg" placeholder="Gustos y preferencias..." />
+            <label className="block text-green-800 font-semibold mb-2">Gustos:</label>
+            <textarea name="gustos" value={editData.gustos} onChange={handleEditChange} rows="4" className="w-full rounded-xl border border-orange-300 px-5 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-lg bg-white shadow-sm" placeholder="Gustos y preferencias..." />
           </div>
           <div>
             <label className="block text-amber-900 font-medium mb-1">Movilidad:</label>
@@ -128,26 +128,26 @@ const DetalleHuesped = () => {
         </form>
       ) : (
         <>
-          <dl className="mb-6 space-y-4">
+          <dl className="mb-8 space-y-6">
             <div>
-              <dt className="font-semibold text-amber-800">Info. huésped:</dt>
-              <dd className="mt-1 text-lg text-amber-900 bg-amber-50 p-3 rounded-lg">
+              <dt className="font-bold text-green-800 text-lg mb-2">Info. huésped:</dt>
+              <dd className="text-lg text-green-900 bg-yellow-50 p-5 rounded-2xl border border-yellow-200 shadow-sm">
                 {huesped.info_huesped || "No hay información disponible"}
               </dd>
             </div>
             <div>
-              <dt className="font-semibold text-amber-800">Gustos:</dt>
-              <dd className="mt-1 text-lg text-amber-900 bg-amber-50 p-3 rounded-lg">
+              <dt className="font-bold text-green-800 text-lg mb-2">Gustos:</dt>
+              <dd className="text-lg text-green-900 bg-yellow-50 p-5 rounded-2xl border border-yellow-200 shadow-sm">
                 {huesped.gustos || "No hay gustos registrados"}
               </dd>
             </div>
             <div>
-              <dt className="font-semibold text-amber-800">Movilidad:</dt>
-              <dd className="mt-1 text-lg text-amber-900">
+              <dt className="font-bold text-green-800 text-lg mb-2">Movilidad:</dt>
+              <dd className="text-lg text-green-900">
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  huesped.movilidad === 'plena' ? 'bg-blue-100 text-blue-800' :
-                  huesped.movilidad === 'alta' ? 'bg-amber-100 text-amber-800' :
-                  'bg-gray-100 text-gray-800'
+                  huesped.movilidad === 'plena' ? 'bg-green-100 text-green-800' :
+                  huesped.movilidad === 'alta' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-orange-100 text-orange-800'
                 }`}>
                   {huesped.movilidad === 'plena' ? 'Plena' :
                    huesped.movilidad === 'alta' ? 'Alta' : 'Baja'}
@@ -155,10 +155,10 @@ const DetalleHuesped = () => {
               </dd>
             </div>
             <div>
-              <dt className="font-semibold text-amber-800">Come asistido:</dt>
-              <dd className="mt-1 text-lg text-amber-900">
+              <dt className="font-bold text-green-800 text-lg mb-2">Come asistido:</dt>
+              <dd className="text-lg text-green-900">
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  huesped.come_asistido ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                  huesped.come_asistido ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
                 }`}>
                   {huesped.come_asistido ? "Sí" : "No"}
                 </span>
@@ -167,8 +167,8 @@ const DetalleHuesped = () => {
           </dl>
           {puedeEditar && (
             <div className="flex gap-4">
-              <button onClick={startEdit} className="flex-1 py-3 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-lg shadow transition-colors">Editar</button>
-              <button onClick={confirmarEliminacion} disabled={eliminando} className="flex-1 py-3 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-lg shadow transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+              <button onClick={startEdit} className="flex-1 py-3 rounded-xl bg-green-700 hover:bg-green-800 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 hover:scale-105 select-none">Editar</button>
+              <button onClick={confirmarEliminacion} disabled={eliminando} className="flex-1 py-3 rounded-xl bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none select-none">
                 {eliminando ? "Procesando..." : "A-dios"}
               </button>
             </div>
@@ -179,13 +179,13 @@ const DetalleHuesped = () => {
       {/* Modal de confirmación */}
       {mostrarConfirmacion && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl transform transition-all">
+          <div className="bg-orange-50 rounded-3xl p-10 w-full max-w-lg mx-4 shadow-2xl transform transition-all border border-orange-200">
             <div className="text-center mb-6">
               <div className="text-6xl mb-4">🕊️</div>
-              <h3 className="text-2xl font-bold text-amber-900 mb-2">
+              <h3 className="text-2xl font-bold text-green-800 mb-2">
                 Confirmar despedida
               </h3>
-              <p className="text-amber-700 text-lg">
+              <p className="text-green-700 text-lg">
                 ¿Deseas dar de baja a <strong>{huesped.nombre}</strong> del sistema?
               </p>
             </div>
@@ -193,13 +193,13 @@ const DetalleHuesped = () => {
             <div className="flex gap-4">
               <button
                 onClick={() => setMostrarConfirmacion(false)}
-                className="flex-1 px-6 py-3 border-2 border-amber-200 text-amber-700 rounded-xl font-semibold hover:bg-amber-50 transition-colors"
+                className="flex-1 px-6 py-3 border-2 border-orange-300 text-green-700 rounded-xl font-semibold hover:bg-yellow-50 transition-all duration-200 transform hover:scale-105 select-none"
               >
                 Cancelar
               </button>
               <button
                 onClick={eliminarHuesped}
-                className="flex-1 px-6 py-3 bg-gray-600 text-white rounded-xl font-semibold hover:bg-gray-700 transition-colors"
+                className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-all duration-200 transform hover:scale-105 shadow-lg select-none"
               >
                 Confirmar
               </button>

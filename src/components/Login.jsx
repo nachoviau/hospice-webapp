@@ -45,51 +45,49 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-200 via-green-300 to-yellow-200 px-4">
       <PWAInstallBanner />
       <div className="w-full max-w-md">
         {/* Logo y título */}
         <div className="text-center mb-8">
           <img src="/logo-hospice.png" alt="Hospice San Camilo" className="mx-auto mb-4 w-28 h-28 object-contain rounded-xl shadow" />
-          <h1 className="text-4xl font-bold text-amber-900 mb-2">San Camilo</h1>
-          <p className="text-amber-700 text-lg">Sistema de Gestión</p>
+          <h1 className="text-4xl font-bold text-green-800 mb-2 drop-shadow-lg">San Camilo</h1>
+          <p className="text-green-700 text-lg font-medium">Sistema de gestión hospitalaria</p>
         </div>
-        <div className="bg-white rounded-2xl shadow-2xl p-8 border border-amber-100">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-amber-900 mb-2">Ingresar</h2>
-            <p className="text-amber-600">Ingresa tu correo para continuar</p>
-          </div>
+        <div className="bg-orange-50 rounded-3xl shadow-lg p-10 border border-orange-200">
+          <h2 className="text-3xl font-bold text-green-800 text-center mb-8">Iniciar Sesión</h2>
           {error && (
-            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-              <p className="text-amber-700 text-sm">{error}</p>
+            <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-700 rounded-2xl text-center font-medium">
+              <p className="text-red-700 text-sm">{error}</p>
             </div>
           )}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
             <div>
-              <label className="block text-base font-bold text-amber-800 mb-2">Correo electrónico</label>
+              <label className="block text-green-800 font-semibold mb-3 text-lg">Correo electrónico</label>
               <div className="relative">
-                <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-400 w-5 h-5" />
+                <FiMail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-green-600" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border-2 border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all text-lg"
+                  className="w-full pl-12 pr-5 py-4 border border-orange-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-lg bg-white shadow-sm"
                   placeholder="tu@email.com"
                   required
                 />
               </div>
-              <p className="text-base text-amber-700 mt-2 font-semibold">Solo usamos su correo para registrarlos y enviarles los partes diarios.</p>
+              <p className="text-base text-green-700 mt-2 font-semibold">Solo usamos su correo para registrarlos y enviarles los partes diarios.</p>
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-amber-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-amber-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+              className="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 transform hover:-translate-y-1 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none text-lg shadow-lg hover:shadow-xl border-2 border-green-900 select-none flex items-center justify-center gap-3"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <>
-                  <FiLogIn className="w-5 h-5" /> Ingresar
+                  <FiLogIn className="w-5 h-5" />
+                  <span>Ingresar</span>
                 </>
               )}
             </button>
@@ -97,19 +95,19 @@ const Login = ({ onLogin }) => {
           
           {/* Separador */}
           <div className="my-6 flex items-center">
-            <div className="flex-1 border-t border-amber-200"></div>
-            <span className="px-4 text-amber-500 text-sm font-medium">o</span>
-            <div className="flex-1 border-t border-amber-200"></div>
+            <div className="flex-1 border-t border-orange-200"></div>
+            <span className="px-4 text-green-500 text-sm font-medium">o</span>
+            <div className="flex-1 border-t border-orange-200"></div>
           </div>
           
           {/* Botón para ingresar como usuario */}
           <button
             onClick={handleGuestLogin}
-            className="w-full bg-gray-100 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2 border border-gray-200"
+            className="w-full bg-purple-100 text-purple-700 py-4 px-6 rounded-xl font-bold hover:bg-purple-200 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 flex items-center justify-center gap-2 border-2 border-purple-300 select-none"
           >
             <FiUser className="w-5 h-5" /> Ingresar como usuario
           </button>
-          <p className="text-center text-gray-500 text-sm mt-3">
+          <p className="text-center text-purple-600 text-sm font-medium">
             Acceso sin registro de correo
           </p>
           
@@ -127,7 +125,7 @@ const Login = ({ onLogin }) => {
           )}
         </div>
         <div className="text-center mt-8">
-          <p className="text-amber-600 text-sm">
+          <p className="text-green-600 text-sm font-medium">
             © 2024 San Camilo. Sistema de gestión para cuidados paliativos.
           </p>
         </div>

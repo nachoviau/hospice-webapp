@@ -40,25 +40,25 @@ const ListaHuespedes = ({ refrescar }) => {
     obtenerHuespedes();
   }, [refrescar]);
 
-  if (cargando) return <p className="text-amber-700">Cargando huéspedes...</p>;
+  if (cargando) return <p className="text-green-700">Cargando huéspedes...</p>;
 
-  if (error) return <p className="text-amber-700 bg-amber-100 p-4 rounded">Error: {error}</p>;
+  if (error) return <p className="text-green-700 bg-orange-100 p-4 rounded-2xl">Error: {error}</p>;
 
   return (
     <div className="flex flex-col gap-6">
       {huespedes.length === 0 ? (
         <div className="text-center">
-                        <p className="text-amber-700 text-lg">Aún no hay huéspedes registrados.</p>
-          <p className="text-amber-600 text-sm mt-2">Total de documentos: {huespedes.length}</p>
+                        <p className="text-green-700 text-lg font-medium">Aún no hay huéspedes registrados.</p>
+          <p className="text-green-600 text-sm mt-2">Total de documentos: {huespedes.length}</p>
         </div>
       ) : (
         <>
-          <p className="text-amber-600 text-sm">Total de huéspedes: {huespedes.length}</p>
+          <p className="text-green-600 text-sm font-medium mb-2">Total de huéspedes: {huespedes.length}</p>
           {huespedes.map((h) => (
             <button
               key={h.id}
               onClick={() => navigate(`/huespedes/${h.id}`)}
-              className="bg-white rounded-xl shadow p-6 border border-amber-100 text-left text-xl font-bold text-amber-900 hover:bg-amber-50 transition"
+              className="bg-orange-50 rounded-2xl shadow-md hover:shadow-lg p-8 border border-orange-200 text-left text-xl font-semibold text-green-800 hover:bg-orange-100 transition-all duration-300 transform hover:-translate-y-1 select-none"
             >
               {h.nombre}
             </button>

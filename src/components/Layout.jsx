@@ -23,18 +23,18 @@ const Layout = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#fbead1] md:bg-[#f2e8d9] font-sans">
+    <div className="min-h-screen flex bg-green-200 md:bg-green-300 font-sans">
       {/* Indicador de modo solo lectura */}
       <ReadOnlyIndicator />
       <UpdateNotification />
       
       {/* Sidebar solo en desktop */}
-      <aside className="hidden md:flex w-[260px] shrink-0 bg-[#f7ecd7] flex-col py-8 px-6 shadow-md rounded-tr-3xl rounded-br-3xl h-screen">
+      <aside className="hidden md:flex w-[260px] shrink-0 bg-green-700 flex-col py-8 px-6 shadow-xl rounded-tr-3xl rounded-br-3xl h-screen border-r-4 border-green-900">
         <div className="mb-12">
-          <h1 className="text-3xl font-extrabold text-[#6d4c1b] tracking-tight select-none text-center mb-4">
+          <h1 className="text-3xl font-extrabold text-white tracking-tight select-none text-center mb-4 drop-shadow-lg">
             San Camilo
           </h1>
-          <hr className="border-[#e0d1bd]" />
+          <hr className="border-green-400" />
         </div>
         <nav className="flex flex-col gap-2">
           {navItems.map((item) => {
@@ -45,8 +45,8 @@ const Layout = () => {
                 to={item.to}
                 className={`flex items-center px-4 py-3 rounded-xl transition-all text-base font-medium 
                   ${isActive
-                    ? 'bg-[#e9decf] text-[#6d4c1b] shadow-inner'
-                    : 'text-[#6d4c1b] hover:bg-[#f3e6d2]'}
+                    ? 'bg-purple-600 text-white shadow-lg scale-105'
+                    : 'text-green-100 hover:bg-green-600 hover:text-white'}
                 `}
               >
                 {item.icon} {item.label}
@@ -57,14 +57,14 @@ const Layout = () => {
         <div className="flex-1" />
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-[#6d4c1b] hover:bg-[#f3e6d2] transition-colors mt-4"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-green-100 hover:bg-green-600 hover:text-white transition-all duration-200 mt-4 border border-green-400"
         >
           <FiLogOut className="text-xl" /> Cerrar sesión
         </button>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 p-8 bg-[#fbead1] md:bg-[#f2e8d9] min-h-screen pb-20 md:pb-0">
+      <main className="flex-1 p-8 bg-green-200 md:bg-green-300 min-h-screen pb-20 md:pb-0">
         <Outlet />
       </main>
 
@@ -76,8 +76,8 @@ const Layout = () => {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex flex-col items-center justify-center flex-1 py-2 text-xs font-medium transition-colors 
-                ${isActive ? 'text-amber-700' : 'text-amber-500 hover:text-amber-700'}`}
+              className={`flex flex-col items-center justify-center flex-1 py-2 text-xs font-medium transition-all duration-200 
+                ${isActive ? 'text-purple-700 bg-purple-50 scale-110 font-semibold' : 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'}`}
             >
               {item.icon}
               <span className="text-xs mt-1">{item.label}</span>
@@ -87,7 +87,7 @@ const Layout = () => {
         {/* Botón de logout en móvil */}
         <button
           onClick={handleLogout}
-          className="flex flex-col items-center justify-center flex-1 py-2 text-xs font-medium text-amber-500 hover:text-amber-700"
+          className="flex flex-col items-center justify-center flex-1 py-2 text-xs font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 transition-all duration-200"
         >
           <FiLogOut className="text-2xl" />
           <span className="text-xs mt-1">Salir</span>

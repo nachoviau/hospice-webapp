@@ -49,25 +49,25 @@ const FormularioHuesped = ({ onSuccess }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto bg-white rounded-xl shadow-xl p-6 flex flex-col gap-4 border border-amber-200">
-      <h2 className="text-2xl font-bold text-amber-800 mb-2">Agregar Huésped</h2>
+    <form onSubmit={handleSubmit} className="w-full max-w-lg mx-auto bg-orange-50 rounded-3xl shadow-lg p-8 flex flex-col gap-6 border border-orange-200">
+      <h2 className="text-3xl font-bold text-green-800 mb-4 text-center">Agregar Huésped</h2>
       {mensaje && <p className="text-green-700 bg-green-100 rounded p-2 text-center">{mensaje}</p>}
-      {error && <p className="text-amber-700 bg-amber-100 rounded p-2 text-center">{error}</p>}
+      {error && <p className="text-green-700 bg-orange-100 rounded-2xl p-3 text-center">{error}</p>}
       <div>
-        <label className="block text-amber-900 font-medium mb-1">Nombre*:</label>
-        <input type="text" value={nombre} onChange={e => setNombre(e.target.value)} required className="w-full rounded-lg border border-amber-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 text-lg" />
+        <label className="block text-green-800 font-semibold mb-2">Nombre*:</label>
+        <input type="text" value={nombre} onChange={e => setNombre(e.target.value)} required className="w-full rounded-xl border border-orange-300 px-5 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-lg bg-white shadow-sm" />
       </div>
       <div>
-        <label className="block text-amber-900 font-medium mb-1">Info. huésped:</label>
-        <textarea value={infoHuesped} onChange={e => setInfoHuesped(e.target.value)} rows="3" className="w-full rounded-lg border border-amber-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 text-lg" placeholder="Información general del huésped..." />
+        <label className="block text-green-800 font-semibold mb-2">Info. huésped:</label>
+        <textarea value={infoHuesped} onChange={e => setInfoHuesped(e.target.value)} rows="4" className="w-full rounded-xl border border-orange-300 px-5 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-lg bg-white shadow-sm" placeholder="Información general del huésped..." />
       </div>
       <div>
-        <label className="block text-amber-900 font-medium mb-1">Gustos:</label>
-        <textarea value={gustos} onChange={e => setGustos(e.target.value)} rows="3" className="w-full rounded-lg border border-amber-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 text-lg" placeholder="Gustos y preferencias..." />
+        <label className="block text-green-800 font-semibold mb-2">Gustos:</label>
+        <textarea value={gustos} onChange={e => setGustos(e.target.value)} rows="4" className="w-full rounded-xl border border-orange-300 px-5 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-lg bg-white shadow-sm" placeholder="Gustos y preferencias..." />
       </div>
       <div>
-        <label className="block text-amber-900 font-medium mb-1">Movilidad:</label>
-        <select value={movilidad} onChange={e => setMovilidad(e.target.value)} className="w-full rounded-lg border border-amber-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 text-lg">
+        <label className="block text-green-800 font-semibold mb-2">Movilidad:</label>
+        <select value={movilidad} onChange={e => setMovilidad(e.target.value)} className="w-full rounded-xl border border-orange-300 px-5 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-lg bg-white shadow-sm">
           <option value="plena">Plena</option>
           <option value="alta">Alta</option>
           <option value="baja">Baja</option>
@@ -75,9 +75,9 @@ const FormularioHuesped = ({ onSuccess }) => {
       </div>
       <div className="flex items-center gap-2">
         <input type="checkbox" checked={comeAsistido} onChange={e => setComeAsistido(e.target.checked)} id="comeAsistido" className="rounded focus:ring-amber-300" />
-        <label htmlFor="comeAsistido" className="text-amber-900 font-medium">Come asistido</label>
+        <label htmlFor="comeAsistido" className="text-green-800 font-semibold">Come asistido</label>
       </div>
-                <button type="submit" disabled={enviando} className="w-full py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-lg shadow transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-2">
+                <button type="submit" disabled={enviando} className="w-full py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-lg shadow transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-2 select-none">
         {enviando ? "Agregando..." : "Agregar huésped"}
       </button>
     </form>

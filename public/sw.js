@@ -1,4 +1,5 @@
-const CACHE_NAME = 'san-camilo-v14'; // Cambiar versión para forzar actualización
+// Nombre del cache - cambiar versión para forzar actualizaciones
+const CACHE_NAME = 'san-camilo-v18';
 const urlsToCache = [
   '/',
   '/index.html', // precache html shell para evitar pantalla blanca cuando no hay red
@@ -20,6 +21,11 @@ self.addEventListener('install', (event) => {
 
 // Interceptar requests y servir desde cache si está disponible
 self.addEventListener('fetch', (event) => {
+  // Excluir Firebase Storage para evitar errores CORS
+  if (event.request.url.includes('firebasestorage.googleapis.com')) {
+    return; // Dejar que el navegador maneje Firebase Storage directamente
+  }
+  
   // 1) Para assets estáticos construidos por Vite: usar estrategia cache-first
   if (event.request.url.includes('/assets/')) {
     event.respondWith(

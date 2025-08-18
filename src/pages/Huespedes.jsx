@@ -18,10 +18,10 @@ const Huespedes = () => {
   return (
     <div className="flex flex-col gap-8 w-full">
       <div className="flex items-center justify-between mb-8">
-        <h2 className="text-4xl font-extrabold text-amber-900 tracking-tight">Huéspedes</h2>
+        <h2 className="text-4xl font-bold text-green-800 tracking-wide">Huéspedes</h2>
         {puedeEditar && (
           <button
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg px-3 py-2 text-base shadow transition-colors sm:px-6 sm:py-3 sm:text-lg"
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg px-3 py-2 text-base shadow transition-colors sm:px-6 sm:py-3 sm:text-lg select-none"
             onClick={abrirModal}
           >
             <FiUserPlus /> Agregar huésped
@@ -37,7 +37,7 @@ const Huespedes = () => {
           onClick={cerrarModal}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl p-8 relative w-full max-w-lg mx-4 animate-fadeIn border border-amber-200"
+            className="bg-white rounded-2xl shadow-xl p-8 relative w-full max-w-lg mx-4 animate-fadeIn border border-amber-200 max-h-[90vh] overflow-y-auto overscroll-contain"
             onClick={e => e.stopPropagation()}
           >
             <button

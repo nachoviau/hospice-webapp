@@ -38,7 +38,22 @@ const Partes = () => {
     setTurnoEditar(null);
   };
   
-  const abrirVer = (turno, texto) => setParteVer({ turno, texto });
+  const abrirVer = (turno, texto) => {
+    // Buscar las imágenes del parte
+    const parteCompleto = partes[turnoToKey(turno)];
+    const imagenes = parteCompleto?.imagenes || [];
+    setParteVer({ turno, texto, imagenes });
+  };
+
+  const turnoToKey = (turnoLabel) => {
+    const turnoMap = {
+      'Mañana': 'mañana',
+      'Tarde': 'tarde', 
+      'Noche': 'noche'
+    };
+    return turnoMap[turnoLabel] || turnoLabel.toLowerCase();
+  };
+
   const cerrarVer = () => setParteVer(null);
 
   useEffect(() => {
@@ -101,7 +116,7 @@ const Partes = () => {
   const partesCargados = Object.values(TURNOS).filter(t => partes[t.value]?.texto).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-6 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-green-200 via-green-300 to-yellow-200 p-6 pb-20">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -111,7 +126,7 @@ const Partes = () => {
         </div>
 
         {/* Controles principales */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-amber-100">
+        <div className="bg-orange-50 rounded-3xl shadow-lg p-8 mb-8 border border-orange-200">
           <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
@@ -129,7 +144,7 @@ const Partes = () => {
             {puedeEditar && (
               <button
                 onClick={() => abrirModal(null)}
-                className="bg-amber-600 text-white px-8 py-3 rounded-xl hover:bg-amber-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-semibold flex items-center gap-2"
+                className="bg-green-700 text-white px-8 py-3 rounded-xl hover:bg-green-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-105 font-semibold flex items-center gap-2 border-2 border-green-900 select-none"
               >
                 <FiPlus className="w-5 h-5" />
                 Cargar Parte
@@ -138,37 +153,13 @@ const Partes = () => {
           </div>
 
           {/* Estadísticas */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-amber-50 rounded-xl p-4 border border-amber-300 shadow-md">
-              <div className="flex items-center gap-3">
-                <FiFileText className="text-2xl text-amber-600" />
+          <div className="mt-6 flex justify-center">
+            <div className="bg-yellow-50 rounded-2xl p-6 border border-yellow-300 shadow-sm">
+              <div className="flex items-center gap-4">
+                <FiFileText className="text-3xl text-green-600" />
                 <div>
-                  <p className="text-sm text-amber-600 font-medium">Partes Cargados</p>
-                  <p className="text-2xl font-bold text-amber-800">{partesCargados}/3</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-orange-50 rounded-xl p-4 border border-orange-300 shadow-md">
-              <div className="flex items-center gap-3">
-                <FiClock className="text-2xl text-orange-600" />
-                <div>
-                  <p className="text-sm text-orange-600 font-medium">Estado</p>
-                  <p className="text-lg font-bold text-orange-800">
-                    {partesCargados === 3 ? "Completo" : "Pendiente"}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-purple-50 rounded-xl p-4 border border-purple-300 shadow-md">
-              <div className="flex items-center gap-3">
-                <FiCheckCircle className="text-2xl text-purple-600" />
-                <div>
-                  <p className="text-sm text-purple-600 font-medium">Resumen</p>
-                  <p className="text-lg font-bold text-purple-800">
-                    {resumenYaExiste ? "Generado" : "Pendiente"}
-                  </p>
+                  <p className="text-sm text-green-600 font-semibold">Partes Cargados</p>
+                  <p className="text-3xl font-bold text-green-800">{partesCargados}/3</p>
                 </div>
               </div>
             </div>
@@ -181,7 +172,7 @@ const Partes = () => {
             <button
               onClick={generarResumen}
               disabled={generandoResumen}
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white py-4 px-6 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
+              className="w-full bg-gradient-to-r from-green-700 to-purple-600 text-white py-4 px-6 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 border-2 border-green-900 select-none"
             >
               {generandoResumen ? (
                 <>
@@ -311,7 +302,7 @@ const Partes = () => {
       {/* Modal para cargar/editar parte */}
       {modalAbierto && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-4xl mx-4 shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto border border-amber-200">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-4xl mx-4 shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto border border-amber-200 overscroll-contain">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-amber-900">
                 {turnoEditar ? `Editar Parte - ${TURNOS.find(t => t.value === turnoEditar)?.label}` : "Cargar Nuevo Parte"}
@@ -325,9 +316,9 @@ const Partes = () => {
             </div>
             
             <CargarParte 
-              fecha={fecha} 
-              turno={turnoEditar} 
-              onSuccess={cerrarModal}
+              fechaInicial={fecha} 
+              turnoInicial={turnoEditar} 
+              onClose={cerrarModal}
             />
           </div>
         </div>
@@ -336,7 +327,7 @@ const Partes = () => {
       {/* Modal para ver parte */}
       {parteVer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-8 w-full max-w-4xl mx-4 shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto border border-amber-200">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-4xl mx-4 shadow-2xl transform transition-all max-h-[90vh] overflow-y-auto border border-amber-200 overscroll-contain">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-amber-900">
                 Parte - {parteVer.turno}
@@ -354,6 +345,33 @@ const Partes = () => {
                 {parteVer.texto}
               </p>
             </div>
+            
+            {/* Mostrar imágenes si existen */}
+            {parteVer.imagenes && parteVer.imagenes.length > 0 && (
+              <div className="mt-6">
+                <h4 className="text-lg font-semibold text-amber-900 mb-4">
+                  Imágenes ({parteVer.imagenes.length})
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {parteVer.imagenes.map((imagen, index) => (
+                    <div key={index} className="group cursor-pointer">
+                      <img
+                        src={imagen.url}
+                        alt={imagen.name || `Imagen ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg border border-amber-200 shadow-sm hover:shadow-md transition-shadow group-hover:scale-105 transform transition-transform"
+                        onClick={() => window.open(imagen.url, '_blank')}
+                      />
+                      <p className="text-xs text-amber-600 mt-1 truncate">
+                        {imagen.name || `imagen_${index + 1}`}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-amber-600 mt-2 italic">
+                  Click en una imagen para verla en tamaño completo
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
