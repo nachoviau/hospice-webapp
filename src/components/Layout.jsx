@@ -23,7 +23,7 @@ const Layout = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-green-200 md:bg-green-300 font-sans">
+    <div className="min-h-screen flex bg-gradient-to-br from-slate-100 via-stone-50 to-gray-100 font-sans">
       {/* Indicador de modo solo lectura */}
       <ReadOnlyIndicator />
       <UpdateNotification />
@@ -64,7 +64,7 @@ const Layout = () => {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 p-8 bg-green-200 md:bg-green-300 min-h-screen pb-20 md:pb-0">
+      <main className="flex-1 p-2 md:p-6 bg-gradient-to-br from-slate-100 via-stone-50 to-gray-100 min-h-screen pb-16 md:pb-0">
         <Outlet />
       </main>
 

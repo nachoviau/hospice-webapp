@@ -16,9 +16,9 @@ const Huespedes = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-stone-50 to-gray-100 p-6 pb-20">
-      <div className="flex flex-col gap-8 w-full">
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-stone-50 to-gray-100 p-2 pb-16">
+      <div className="flex flex-col gap-6 w-full max-w-5xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
           <h2 className="text-4xl font-bold text-green-800 tracking-wide">Huéspedes</h2>
           {puedeEditar && (
             <button

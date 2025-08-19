@@ -116,8 +116,8 @@ const Partes = () => {
   const partesCargados = Object.values(TURNOS).filter(t => partes[t.value]?.texto).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-stone-50 to-gray-100 p-6 pb-20">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-stone-50 to-gray-100 p-2 pb-16">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="text-5xl mb-4">📋</div>
@@ -126,18 +126,18 @@ const Partes = () => {
         </div>
 
         {/* Controles principales */}
-        <div className="bg-orange-50 rounded-3xl shadow-lg p-8 mb-8 border border-orange-200">
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg p-6 mb-6 border border-gray-200/50">
           <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
-                <FiCalendar className="text-2xl text-amber-600" />
-                <label className="text-lg font-semibold text-amber-800">Fecha:</label>
+                <FiCalendar className="text-2xl text-gray-600" />
+                <label className="text-lg font-semibold text-gray-800">Fecha:</label>
               </div>
               <input
                 type="date"
                 value={fecha}
                 onChange={e => setFecha(e.target.value)}
-                className="px-4 py-3 border-2 border-amber-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all text-lg font-medium"
+                                  className="px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all text-lg font-medium bg-white/70"
               />
             </div>
             
@@ -155,7 +155,7 @@ const Partes = () => {
 
           {/* Estadísticas */}
           <div className="mt-6 flex justify-center">
-            <div className="bg-yellow-50 rounded-2xl p-6 border border-yellow-300 shadow-sm">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50 shadow-sm">
               <div className="flex items-center gap-4">
                 <FiFileText className="text-3xl text-green-600" />
                 <div>
@@ -177,7 +177,7 @@ const Partes = () => {
         )}
 
         {/* Lista de turnos */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {TURNOS.map((turno) => {
             const parte = partes[turno.value];
             const tieneTexto = parte?.texto;

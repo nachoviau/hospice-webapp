@@ -1,23 +1,39 @@
 // Registrar el service worker
 export function registerSW() {
-  console.log('Intentando registrar SW...');
-  
-  if ('serviceWorker' in navigator) {
-    console.log('Service Worker soportado');
-    
-    window.addEventListener('load', () => {
-      console.log('Página cargada, registrando SW...');
-      
-      navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
-        .then((registration) => {
-          console.log('✅ SW registrado exitosamente:', registration.scope);
-          console.log('Estado del SW:', registration.active ? 'Activo' : 'Inactivo');
-        })
-        .catch((error) => {
-          console.error('❌ Error registrando SW:', error);
-        });
-    });
-  } else {
-    console.log('❌ Service Worker no soportado en este navegador');
-  }
+	if ('serviceWorker' in navigator) {
+		window.addEventListener('load', () => {
+			navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+				.then((registration) => {
+					// Forzar chequeo de actualización al ganar foco
+					const tryUpdate = () => {
+						if (registration && typeof registration.update === 'function') {
+							registration.update();
+						}
+					};
+					window.addEventListener('visibilitychange', () => {
+						if (document.visibilityState === 'visible') tryUpdate();
+					});
+
+					// Activar inmediatamente un nuevo SW
+					if (registration.waiting) {
+						registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+					}
+					registration.addEventListener('updatefound', () => {
+						const newSW = registration.installing;
+						if (!newSW) return;
+						newSW.addEventListener('statechange', () => {
+							if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+								newSW.postMessage({ type: 'SKIP_WAITING' });
+							}
+						});
+					});
+
+					// Recargar cuando el controlador cambia (nuevo SW activo)
+					navigator.serviceWorker.addEventListener('controllerchange', () => {
+						window.location.reload();
+					});
+				})
+				.catch(() => {});
+		});
+	}
 } 

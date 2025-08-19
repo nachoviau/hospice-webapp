@@ -10,6 +10,15 @@ const TURNOS = [
   { value: "noche", label: "Noche" },
 ];
 
+// Sanea segmentos para rutas de Storage: sin acentos, solo ascii seguro
+const sanitizePathSegment = (segment) => {
+  return segment
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // quitar diacríticos
+    .replace(/[^a-zA-Z0-9_\-]/g, "-") // reemplazar otros por guión
+    .toLowerCase();
+};
+
 const getFechaHoy = () => {
   const hoy = new Date();
   return hoy.toISOString().split("T")[0]; // yyyy-mm-dd
@@ -98,7 +107,8 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
             // Subir nuevas imágenes
             try {
               const timestamp = Date.now();
-              const fileName = `partes/${fecha}/${turno}/${timestamp}_${imagen.name}`;
+              const safeTurno = sanitizePathSegment(turno);
+              const fileName = `partes/${fecha}/${safeTurno}/${timestamp}_${imagen.name}`;
               const storageRef = ref(storage, fileName);
               
               const snapshot = await uploadBytes(storageRef, imagen.file);

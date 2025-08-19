@@ -58,13 +58,22 @@ const ListaHuespedes = ({ refrescar }) => {
             <button
               key={h.id}
               onClick={() => navigate(`/huespedes/${h.id}`)}
-              className="bg-green-50 rounded-2xl shadow-md hover:shadow-lg p-8 border border-green-200 text-left text-xl font-semibold text-green-800 hover:bg-green-100 transition-all duration-300 transform hover:-translate-y-1 select-none"
+              className="bg-green-800 rounded-2xl shadow-md hover:shadow-lg p-8 border border-green-900 text-left text-2xl sm:text-3xl font-semibold text-white hover:bg-green-900 transition-all duration-300 transform hover:-translate-y-1 select-none"
             >
               {h.nombre}
             </button>
           ))}
         </>
       )}
+
+      {/* Botón de historial de huéspedes (a futuro navegará) */}
+      <button
+        type="button"
+        onClick={() => navigate('/huespedes/historial')}
+        className="bg-purple-600 hover:bg-purple-700 text-white rounded-2xl shadow-md hover:shadow-lg p-4 md:p-5 border border-purple-700 text-left text-2xl sm:text-3xl font-semibold transition-all duration-300 select-none"
+      >
+        Historial de huéspedes
+      </button>
     </div>
   );
 };

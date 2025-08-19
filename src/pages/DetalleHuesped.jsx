@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, deleteDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -78,6 +78,17 @@ const DetalleHuesped = () => {
     setMostrarConfirmacion(false);
     setEliminando(true);
     try {
+      // Archivar en historial antes de borrar
+      const docRef = doc(db, "huespedes", id);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        const historialRef = doc(db, "huespedes_historial", id);
+        await setDoc(historialRef, {
+          ...data,
+          despedidoAt: serverTimestamp(),
+        });
+      }
       await deleteDoc(doc(db, "huespedes", id));
       navigate("/huespedes");
     } catch (err) {

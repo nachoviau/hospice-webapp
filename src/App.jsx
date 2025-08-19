@@ -7,6 +7,7 @@ import Calendario from "./pages/Calendario";
 import Tareas from "./pages/Tareas";
 import Partes from "./pages/Partes";
 import DetalleHuesped from "./pages/DetalleHuesped";
+import HistorialHuespedes from "./pages/HistorialHuespedes";
 
 function AppContent() {
   const { usuarioEmail, cargando, login } = useAuth();
@@ -23,6 +24,7 @@ function AppContent() {
         <Route index element={<Navigate to="/huespedes" replace />} />
         <Route path="huespedes" element={<Huespedes />} />
         <Route path="huespedes/:id" element={<DetalleHuesped />} />
+        <Route path="huespedes/historial" element={<HistorialHuespedes />} />
         <Route path="calendario" element={<Calendario />} />
         <Route path="tareas" element={<Tareas />} />
         <Route path="partes" element={<Partes />} />
