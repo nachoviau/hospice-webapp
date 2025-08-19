@@ -1,5 +1,5 @@
 // Nombre del cache - cambiar versión para forzar actualizaciones
-const CACHE_NAME = 'san-camilo-v22';
+const CACHE_NAME = 'san-camilo-v24';
 const urlsToCache = [
   '/',
   '/index.html', // precache html shell para evitar pantalla blanca cuando no hay red

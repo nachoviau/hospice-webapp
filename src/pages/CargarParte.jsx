@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db, storage } from "../firebaseConfig";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { FiCamera, FiImage, FiX } from "react-icons/fi";
+import { FiImage, FiX } from "react-icons/fi";
 
 const TURNOS = [
   { value: "mañana", label: "Mañana" },
@@ -204,14 +204,7 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
     setImagenes(prev => prev.filter(img => img.id !== imageId));
   };
 
-  const openCamera = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment'; // Usar cámara trasera
-    input.onchange = handleImageUpload;
-    input.click();
-  };
+
 
   const openGallery = () => {
     const input = document.createElement('input');
@@ -268,14 +261,6 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
             <div className="flex items-center justify-between">
               <label className="block text-green-800 font-semibold text-lg">Imágenes (opcional):</label>
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={openCamera}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium select-none"
-                >
-                  <FiCamera className="w-4 h-4" />
-                  Cámara
-                </button>
                 <button
                   type="button"
                   onClick={openGallery}

@@ -8,6 +8,7 @@ import Tareas from "./pages/Tareas";
 import Partes from "./pages/Partes";
 import DetalleHuesped from "./pages/DetalleHuesped";
 import HistorialHuespedes from "./pages/HistorialHuespedes";
+import AdiosHuesped from "./pages/AdiosHuesped";
 
 function AppContent() {
   const { usuarioEmail, cargando, login } = useAuth();
@@ -25,6 +26,7 @@ function AppContent() {
         <Route path="huespedes" element={<Huespedes />} />
         <Route path="huespedes/:id" element={<DetalleHuesped />} />
         <Route path="huespedes/historial" element={<HistorialHuespedes />} />
+        <Route path="huespedes/historial/:id/adios" element={<AdiosHuesped />} />
         <Route path="calendario" element={<Calendario />} />
         <Route path="tareas" element={<Tareas />} />
         <Route path="partes" element={<Partes />} />
