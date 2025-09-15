@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
+  <!-- Fondo violeta -->
+  <rect width="1920" height="1080" fill="#9333EA"/>
+  <!-- Bloque verde ocupando ~40% diagonal -->
+  <polygon points="0,1080 1920,1080 1920,0" fill="#15803D"/>
+  <!-- Safe area indicativa (no se renderiza en export final, solo guía) -->
+  <!-- <rect x="640" y="220" width="640" height="640" fill="none" stroke="#fff" stroke-dasharray="8,8"/> -->
+</svg> 

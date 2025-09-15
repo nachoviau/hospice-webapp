@@ -10,7 +10,17 @@ dotenv.config();
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const REMITENTE = process.env.SENDGRID_FROM || "tucorreo@tudominio.com"; // El mail que usaste en SendGrid
 const ASUNTO = "Resumen diario San Camilo";
-const FECHA = new Date().toISOString().split("T")[0];
+const tz = 'America/Argentina/Buenos_Aires';
+const fmt = new Intl.DateTimeFormat('en-CA', {
+  timeZone: tz,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+const FECHA = fmt.format(new Date());
+
+// Bandera para habilitar/deshabilitar envío. Dejar en false para suspender temporalmente.
+const ENVIO_HABILITADO = false;
 
 const LAST_SENT_FILE = "lastResumenSent.txt";
 let lastSent = "";
@@ -29,6 +39,10 @@ const db = admin.firestore();
 sgMail.setApiKey(SENDGRID_API_KEY);
 
 async function main() {
+  if (!ENVIO_HABILITADO) {
+    console.log("Envío de resumen suspendido (ENVIO_HABILITADO=false). No se enviarán correos.");
+    return;
+  }
   if (lastSent === FECHA) {
     console.log("Ya se envió el resumen para la fecha:", FECHA);
     return;

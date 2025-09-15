@@ -20,8 +20,22 @@ const sanitizePathSegment = (segment) => {
 };
 
 const getFechaHoy = () => {
-  const hoy = new Date();
-  return hoy.toISOString().split("T")[0]; // yyyy-mm-dd
+  const tz = 'America/Argentina/Buenos_Aires';
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return fmt.format(new Date()); // yyyy-mm-dd
+};
+
+// Normaliza saltos de línea de distintas fuentes (Windows CRLF, CR, Unicode separators)
+const normalizeNewlines = (input) => {
+  if (typeof input !== 'string') return '';
+  return input
+    .replace(/\r\n?/g, '\n') // CRLF o CR -> LF
+    .replace(/[\u2028\u2029]/g, '\n'); // separators unicode -> LF
 };
 
 const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
@@ -57,7 +71,7 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
           const data = snapshot.data();
           const parte = data.turnos?.[turno]?.texto || "";
           const imagenesExistentes = data.turnos?.[turno]?.imagenes || [];
-          setTexto(parte);
+          setTexto(normalizeNewlines(parte));
           
           // Convertir imágenes existentes al formato local
           const imagenesConvertidas = imagenesExistentes.map((img, index) => ({
@@ -82,10 +96,6 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
   }, [fecha, turno]);
 
   const guardarParte = async () => {
-    if (!texto.trim()) {
-      setError("El parte no puede estar vacío.");
-      return;
-    }
     
     setGuardando(true);
     setError("");
@@ -127,25 +137,20 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
       }
 
       const docRef = doc(db, "partesDiarios", fecha);
-      const snapshot = await getDoc(docRef);
-      if (snapshot.exists()) {
-        await updateDoc(docRef, {
-          [`turnos.${turno}.texto`]: texto,
-          [`turnos.${turno}.imagenes`]: imagenesUrls,
-          [`turnos.${turno}.fechaActualizacion`]: new Date(),
-        });
-      } else {
-        await setDoc(docRef, {
+      await setDoc(
+        docRef,
+        {
           fecha,
           turnos: {
             [turno]: { 
               texto, 
               imagenes: imagenesUrls,
-              fechaCreacion: new Date()
+              fechaActualizacion: new Date(),
             },
           },
-        });
-      }
+        },
+        { merge: true }
+      );
       
       setMensaje("¡Parte guardado con éxito!");
       setImagenes([]); // Limpiar imágenes después de guardar
@@ -164,10 +169,6 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
   };
 
   const handleGuardarClick = () => {
-    if (!texto.trim()) {
-      setError("El parte no puede estar vacío.");
-      return;
-    }
     setConfirmOpen(true);
   };
 
@@ -250,7 +251,7 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
           <textarea
             rows="8"
             value={texto}
-            onChange={e => setTexto(e.target.value)}
+            onChange={e => setTexto(normalizeNewlines(e.target.value))}
             className="w-full p-4 border border-amber-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-300 text-lg mb-4"
             placeholder="Escribí aquí el parte del turno..."
             aria-label="Parte del turno"

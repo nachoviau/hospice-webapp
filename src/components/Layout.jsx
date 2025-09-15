@@ -1,5 +1,6 @@
 // src/components/Layout.jsx
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
 import { FiUsers, FiCalendar, FiFileText, FiLogOut, FiCheckSquare } from "react-icons/fi";
 import ReadOnlyIndicator from "./ReadOnlyIndicator";
 import UpdateNotification from "./UpdateNotification";
@@ -15,7 +16,10 @@ const navItems = [
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
 
+  const openLogoutConfirm = () => setConfirmLogoutOpen(true);
+  const closeLogoutConfirm = () => setConfirmLogoutOpen(false);
   const handleLogout = () => {
     localStorage.removeItem("voluntarioEmail");
     navigate("/login");
@@ -56,8 +60,8 @@ const Layout = () => {
         </nav>
         <div className="flex-1" />
         <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium text-green-100 hover:bg-green-600 hover:text-white transition-all duration-200 mt-4 border border-green-400"
+          onClick={openLogoutConfirm}
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-all duration-200 mt-4 border-2 border-purple-800"
         >
           <FiLogOut className="text-xl" /> Cerrar sesión
         </button>
@@ -86,13 +90,35 @@ const Layout = () => {
         })}
         {/* Botón de logout en móvil */}
         <button
-          onClick={handleLogout}
-          className="flex flex-col items-center justify-center flex-1 py-2 text-xs font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 transition-all duration-200"
+          onClick={openLogoutConfirm}
+          className="flex flex-col items-center justify-center flex-1 py-2 text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all duration-200"
         >
           <FiLogOut className="text-2xl" />
           <span className="text-xs mt-1">Salir</span>
         </button>
       </nav>
+      {confirmLogoutOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-lg mx-4 shadow-2xl border border-amber-200">
+            <h3 className="text-xl font-bold text-amber-900 mb-4">Confirmar cierre de sesión</h3>
+            <p className="text-amber-800 mb-6">Vas a salir de tu cuenta. ¿Querés continuar?</p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={closeLogoutConfirm}
+                className="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors font-semibold select-none"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-6 py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-all duration-200 transform hover:scale-105 font-semibold shadow-lg border-2 border-purple-700 select-none"
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

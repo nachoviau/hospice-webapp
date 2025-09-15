@@ -24,10 +24,8 @@
       "**/node_modules/**"
     ],
     "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
+      { "source": "/generateSummary", "function": { "functionId": "generateSummary", "region": "us-central1" } },
+      { "source": "**", "destination": "/index.html" }
     ]
   }
 }

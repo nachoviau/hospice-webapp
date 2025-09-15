@@ -16,6 +16,11 @@ const DetalleHuesped = () => {
   const [guardando, setGuardando] = useState(false);
   const [eliminando, setEliminando] = useState(false);
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  // Bienvenida
+  const [modalBienvenidaAbierto, setModalBienvenidaAbierto] = useState(false);
+  const [bienvenidaEditando, setBienvenidaEditando] = useState(false);
+  const [bienvenidaTexto, setBienvenidaTexto] = useState("");
+  const [guardandoBienvenida, setGuardandoBienvenida] = useState(false);
 
   useEffect(() => {
     const fetchHuesped = async () => {
@@ -98,6 +103,34 @@ const DetalleHuesped = () => {
     }
   };
 
+  const abrirBienvenida = () => {
+    const texto = huesped?.bienvenida?.texto || "";
+    setBienvenidaTexto(texto);
+    setBienvenidaEditando(!texto && puedeEditar);
+    setModalBienvenidaAbierto(true);
+  };
+
+  const cerrarBienvenida = () => {
+    setModalBienvenidaAbierto(false);
+    setBienvenidaEditando(false);
+    setBienvenidaTexto("");
+  };
+
+  const guardarBienvenida = async () => {
+    if (!puedeEditar) return;
+    setGuardandoBienvenida(true);
+    try {
+      const nueva = { texto: bienvenidaTexto || "", fechaActualizacion: serverTimestamp() };
+      await updateDoc(doc(db, "huespedes", id), { bienvenida: nueva });
+      setHuesped(prev => ({ ...prev, bienvenida: { ...nueva, fechaActualizacion: new Date() } }));
+      setBienvenidaEditando(false);
+    } catch (err) {
+      setError("No se pudo guardar la bienvenida: " + (err?.message || String(err)));
+    } finally {
+      setGuardandoBienvenida(false);
+    }
+  };
+
   if (cargando) return <p className="text-green-700 font-medium">Cargando...</p>;
   if (error) return <p className="text-green-700 bg-orange-100 rounded-2xl p-4 text-center">{error}</p>;
   if (!huesped) return null;
@@ -105,7 +138,15 @@ const DetalleHuesped = () => {
   return (
     <div className="max-w-2xl mx-auto bg-orange-50 rounded-3xl shadow-lg p-10 mt-8 border border-orange-200">
       <button onClick={() => navigate(-1)} className="mb-8 text-green-700 hover:text-green-800 hover:bg-green-50 px-4 py-2 rounded-xl transition-all duration-200 text-base font-medium select-none">&larr; Volver</button>
-      <h2 className="text-4xl font-bold text-green-800 mb-8 text-center">{huesped.nombre}</h2>
+      <h2 className="text-4xl font-bold text-green-800 mb-3 text-center">{huesped.nombre}</h2>
+      <div className="text-center mb-8">
+        <button
+          onClick={abrirBienvenida}
+          className="px-6 py-3 rounded-xl font-semibold shadow-lg transition-colors border-2 bg-green-700 text-white hover:bg-green-800 border-green-900"
+        >
+          {huesped?.bienvenida?.texto ? 'Leer bienvenida' : 'Cargar bienvenida'}
+        </button>
+      </div>
       {editando ? (
         <form onSubmit={e => { e.preventDefault(); guardarEdicion(); }} className="flex flex-col gap-4">
           <div>
@@ -215,6 +256,51 @@ const DetalleHuesped = () => {
                 Confirmar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Bienvenida */}
+      {modalBienvenidaAbierto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-3xl mx-4 shadow-2xl border border-amber-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-bold text-amber-900">Bienvenida</h3>
+              <button onClick={cerrarBienvenida} className="p-2 text-amber-600 hover:text-amber-800 hover:bg-amber-100 rounded-lg transition-colors">
+                ×
+              </button>
+            </div>
+            {bienvenidaEditando ? (
+              <div className="space-y-4">
+                <textarea
+                  rows="10"
+                  value={bienvenidaTexto}
+                  onChange={e => setBienvenidaTexto(e.target.value)}
+                  className="w-full rounded-xl border border-orange-300 px-5 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-lg bg-white shadow-sm"
+                  placeholder="Escribí aquí la bienvenida..."
+                />
+                <div className="flex gap-3 justify-end">
+                  <button onClick={() => setBienvenidaEditando(false)} className="px-5 py-3 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 font-semibold">Cancelar</button>
+                  <button onClick={guardarBienvenida} disabled={guardandoBienvenida} className="px-6 py-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 font-semibold border-2 border-purple-800 disabled:opacity-60">
+                    {guardandoBienvenida ? 'Guardando...' : 'Guardar'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-amber-50 rounded-xl p-6 border border-amber-200">
+                  <p className="text-amber-800 leading-relaxed whitespace-pre-wrap">{huesped?.bienvenida?.texto || 'Sin bienvenida cargada.'}</p>
+                </div>
+                {huesped?.bienvenida?.fechaActualizacion && (
+                  <div className="text-sm text-amber-600">Actualizado: {(() => { try { return huesped.bienvenida.fechaActualizacion.toDate().toLocaleString('es-ES'); } catch { return ''; } })()}</div>
+                )}
+                {puedeEditar && (
+                  <div className="flex justify-end">
+                    <button onClick={() => setBienvenidaEditando(true)} className="px-6 py-3 rounded-lg bg-green-700 text-white hover:bg-green-800 font-semibold border-2 border-green-900">Editar</button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

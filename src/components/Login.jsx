@@ -45,14 +45,12 @@ const Login = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-200 via-green-300 to-yellow-200 px-4">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundImage: "url('/login-bg.svg')", backgroundSize: 'cover', backgroundPosition: 'center' }}>
       <PWAInstallBanner />
       <div className="w-full max-w-md">
         {/* Logo y título */}
         <div className="text-center mb-8">
           <img src="/logo-hospice.png" alt="Hospice San Camilo" className="mx-auto mb-4 w-28 h-28 object-contain rounded-xl shadow" />
-          <h1 className="text-4xl font-bold text-green-800 mb-2 drop-shadow-lg">San Camilo</h1>
-          <p className="text-green-700 text-lg font-medium">Sistema de gestión hospitalaria</p>
         </div>
         <div className="bg-orange-50 rounded-3xl shadow-lg p-10 border border-orange-200">
           <h2 className="text-3xl font-bold text-green-800 text-center mb-8">Iniciar Sesión</h2>
