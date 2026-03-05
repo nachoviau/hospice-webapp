@@ -1,6 +1,7 @@
 const admin = require("firebase-admin");
 const { defineSecret } = require("firebase-functions/params");
 const { onRequest } = require("firebase-functions/v2/https");
+const { onDocumentCreated, onDocumentWritten } = require("firebase-functions/v2/firestore");
 
 admin.initializeApp();
 
@@ -76,3 +77,292 @@ Redactá un resumen corto y pragmático del día${fecha ? ` (${fecha})` : ''} pa
     res.status(500).json({ error: "Error al generar resumen" });
   }
 });
+
+const ANONYMOUS_USER = "usuario_anonimo";
+
+const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
+
+const volunteerDocId = (email) => encodeURIComponent(normalizeEmail(email));
+
+const isInvalidTokenError = (code) =>
+  code === "messaging/invalid-registration-token" ||
+  code === "messaging/registration-token-not-registered";
+
+const TURNOS = ["mañana", "tarde", "noche"];
+
+async function getVolunteerDocByEmail(email) {
+  const normalized = normalizeEmail(email);
+  if (!normalized || normalized === ANONYMOUS_USER) return null;
+
+  const docsByPath = new Map();
+
+  const byIdRef = admin.firestore().collection("voluntarios").doc(volunteerDocId(normalized));
+  const byIdSnap = await byIdRef.get();
+  if (byIdSnap.exists) {
+    docsByPath.set(byIdSnap.ref.path, { ref: byIdSnap.ref, data: byIdSnap.data() || {} });
+  }
+
+  const byFieldSnap = await admin
+    .firestore()
+    .collection("voluntarios")
+    .where("email", "==", normalized)
+    .get();
+
+  byFieldSnap.forEach((docSnap) => {
+    docsByPath.set(docSnap.ref.path, { ref: docSnap.ref, data: docSnap.data() || {} });
+  });
+
+  if (docsByPath.size === 0) return null;
+
+  const refs = [];
+  const tokensSet = new Set();
+  let enabledByAnyDoc = false;
+
+  docsByPath.forEach(({ ref, data }) => {
+    refs.push(ref);
+    if (data.notificationsEnabled !== false) {
+      enabledByAnyDoc = true;
+    }
+    const tokens = Array.isArray(data.tokens) ? data.tokens : [];
+    tokens.forEach((token) => {
+      if (typeof token === "string" && token.trim()) {
+        tokensSet.add(token);
+      }
+    });
+  });
+
+  return {
+    refs,
+    data: {
+      notificationsEnabled: enabledByAnyDoc,
+      tokens: Array.from(tokensSet),
+    },
+  };
+}
+
+async function getAllResponsibleTokensExcluding(excludedEmail) {
+  const excluded = normalizeEmail(excludedEmail);
+  const volunteerSnap = await admin.firestore().collection("voluntarios").get();
+  const tokenToOwner = new Map();
+  const ownerDocs = new Map();
+  const groupedByEmail = new Map();
+
+  volunteerSnap.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+    const email = normalizeEmail(data.email);
+    if (!email || email === ANONYMOUS_USER) return;
+    if (excluded && email === excluded) return;
+    const group = groupedByEmail.get(email) || {
+      refs: [],
+      enabledByAnyDoc: false,
+      tokens: new Set(),
+    };
+    group.refs.push(docSnap.ref);
+    if (data.notificationsEnabled !== false) {
+      group.enabledByAnyDoc = true;
+    }
+    const tokens = Array.isArray(data.tokens) ? data.tokens : [];
+    tokens.forEach((token) => {
+      if (typeof token === "string" && token.trim()) {
+        group.tokens.add(token);
+      }
+    });
+    groupedByEmail.set(email, group);
+  });
+
+  groupedByEmail.forEach((group, email) => {
+    if (!group.enabledByAnyDoc) return;
+    const dedupedTokens = Array.from(group.tokens);
+    if (dedupedTokens.length === 0) return;
+
+    ownerDocs.set(email, group.refs);
+    dedupedTokens.forEach((token) => {
+      tokenToOwner.set(token, email);
+    });
+  });
+
+  return { allTokens: Array.from(tokenToOwner.keys()), tokenToOwner, ownerDocs };
+}
+
+async function cleanupInvalidTokens(response, allTokens, tokenToOwner, ownerDocs) {
+  const invalidByOwner = new Map();
+
+  response.responses.forEach((sendResult, index) => {
+    if (sendResult.success) return;
+    const code = sendResult.error?.code;
+    if (!isInvalidTokenError(code)) return;
+    const token = allTokens[index];
+    const owner = tokenToOwner.get(token);
+    if (!owner) return;
+    const ownerInvalid = invalidByOwner.get(owner) || [];
+    ownerInvalid.push(token);
+    invalidByOwner.set(owner, ownerInvalid);
+  });
+
+  const cleanupTasks = [];
+  invalidByOwner.forEach((invalidTokens, ownerEmail) => {
+    const refs = ownerDocs.get(ownerEmail);
+    if (!refs || refs.length === 0 || invalidTokens.length === 0) return;
+    refs.forEach((ref) => {
+      cleanupTasks.push(
+        ref.update({
+          tokens: admin.firestore.FieldValue.arrayRemove(...invalidTokens),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        })
+      );
+    });
+  });
+
+  if (cleanupTasks.length > 0) {
+    await Promise.all(cleanupTasks);
+  }
+}
+
+exports.notifyPartCommentParticipants = onDocumentCreated(
+  {
+    document: "partesDiarios/{fecha}/comentarios/{commentId}",
+    region: "us-central1",
+  },
+  async (event) => {
+    const snap = event.data;
+    if (!snap) return;
+
+    const { fecha } = event.params;
+    const comment = snap.data() || {};
+    const turno = comment.turno;
+    const author = normalizeEmail(comment.autor);
+    const commentText = String(comment.texto || "").trim();
+
+    if (!fecha || !turno || !author || author === ANONYMOUS_USER) return;
+
+    const participants = new Set();
+
+    const parteSnap = await admin.firestore().collection("partesDiarios").doc(fecha).get();
+    if (parteSnap.exists) {
+      const parteData = parteSnap.data() || {};
+      const turnoData = parteData?.turnos?.[turno] || {};
+      const uploadedBy = normalizeEmail(turnoData.uploadedBy);
+      if (uploadedBy && uploadedBy !== ANONYMOUS_USER) {
+        participants.add(uploadedBy);
+      }
+    }
+
+    const commentsSnap = await admin
+      .firestore()
+      .collection("partesDiarios")
+      .doc(fecha)
+      .collection("comentarios")
+      .where("turno", "==", turno)
+      .get();
+
+    commentsSnap.forEach((docSnap) => {
+      const commentAuthor = normalizeEmail(docSnap.data()?.autor);
+      if (commentAuthor && commentAuthor !== ANONYMOUS_USER) {
+        participants.add(commentAuthor);
+      }
+    });
+
+    participants.delete(author);
+    if (participants.size === 0) return;
+
+    const tokenToOwner = new Map();
+    const ownerDocs = new Map();
+
+    for (const participant of participants) {
+      const volunteerDoc = await getVolunteerDocByEmail(participant);
+      if (!volunteerDoc) continue;
+
+      const notificationsEnabled = volunteerDoc.data.notificationsEnabled !== false;
+      const tokens = Array.isArray(volunteerDoc.data.tokens) ? volunteerDoc.data.tokens : [];
+      if (!notificationsEnabled || tokens.length === 0) continue;
+
+      ownerDocs.set(participant, volunteerDoc.refs);
+      for (const token of tokens) {
+        if (typeof token === "string" && token.trim()) {
+          tokenToOwner.set(token, participant);
+        }
+      }
+    }
+
+    const allTokens = Array.from(tokenToOwner.keys());
+    if (allTokens.length === 0) return;
+
+    const safeText = commentText.length > 160 ? `${commentText.slice(0, 157)}...` : commentText;
+    const title = `Nueva respuesta en el parte de la ${turno}`;
+    const body = safeText
+      ? `${author} respondió: "${safeText}"`
+      : `${author} respondió en el parte de la ${turno} (${fecha}).`;
+    const url = `/partes?fecha=${encodeURIComponent(fecha)}&turno=${encodeURIComponent(turno)}`;
+
+    const response = await admin.messaging().sendEachForMulticast({
+      tokens: allTokens,
+      webpush: {
+        headers: { Urgency: "high" },
+        data: {
+          title,
+          body,
+          url,
+          fecha,
+          turno,
+          autor: author,
+        },
+      },
+    });
+
+    await cleanupInvalidTokens(response, allTokens, tokenToOwner, ownerDocs);
+  }
+);
+
+exports.notifyPartCreatedToResponsibles = onDocumentWritten(
+  {
+    document: "partesDiarios/{fecha}",
+    region: "us-central1",
+  },
+  async (event) => {
+    const afterSnap = event.data?.after;
+    if (!afterSnap || !afterSnap.exists) return;
+
+    const beforeData = event.data?.before?.data() || {};
+    const afterData = afterSnap.data() || {};
+    const beforeTurnos = beforeData.turnos || {};
+    const afterTurnos = afterData.turnos || {};
+    const { fecha } = event.params;
+
+    const createdTurnos = TURNOS.filter((turno) => {
+      const beforeTexto = String(beforeTurnos?.[turno]?.texto || "").trim();
+      const afterTexto = String(afterTurnos?.[turno]?.texto || "").trim();
+      return !beforeTexto && !!afterTexto;
+    });
+
+    if (createdTurnos.length === 0) return;
+
+    for (const turno of createdTurnos) {
+      const uploader = normalizeEmail(afterTurnos?.[turno]?.uploadedBy);
+      const { allTokens, tokenToOwner, ownerDocs } = await getAllResponsibleTokensExcluding(uploader);
+      if (allTokens.length === 0) continue;
+
+      const actor = uploader || "Un responsable";
+      const title = `Se cargó el parte de la ${turno}`;
+      const body = `${actor} cargó el parte de la ${turno} (${fecha}).`;
+      const url = `/partes?fecha=${encodeURIComponent(fecha)}&turno=${encodeURIComponent(turno)}`;
+
+      const response = await admin.messaging().sendEachForMulticast({
+        tokens: allTokens,
+        webpush: {
+          headers: { Urgency: "high" },
+          data: {
+            title,
+            body,
+            url,
+            fecha,
+            turno,
+            actor,
+            eventType: "new-part",
+          },
+        },
+      });
+
+      await cleanupInvalidTokens(response, allTokens, tokenToOwner, ownerDocs);
+    }
+  }
+);

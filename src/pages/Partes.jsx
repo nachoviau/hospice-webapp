@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import CargarParte from "./CargarParte";
-import { doc, getDoc, updateDoc, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, updateDoc, collection, getDocs, addDoc, where, orderBy, limit as fsLimit, query as fsQuery, startAfter, serverTimestamp, deleteDoc, getCountFromServer } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { generateSummary } from "../services/chatgptService";
 import { FiCalendar, FiPlus, FiEye, FiEdit, FiFileText, FiClock, FiCheckCircle, FiAlertCircle, FiX } from "react-icons/fi";
@@ -116,6 +116,7 @@ const Partes = () => {
       }
     };
     fetchPartes();
+    fetchCommentCounts();
   }, [fecha, modalAbierto, generandoResumen]);
 
   const generarResumen = async () => {
@@ -205,6 +206,128 @@ const Partes = () => {
   const resumenYaExiste = !!partes.resumen?.texto;
   const partesCompletos = partes["mañana"]?.texto && partes["tarde"]?.texto && partes["noche"]?.texto;
   const partesCargados = Object.values(TURNOS).filter(t => partes[t.value]?.texto).length;
+
+  // Comentarios por turno (colapsable, paginación, CRUD)
+  const TURNOS_VALS = ["mañana", "tarde", "noche"];
+  const [commentsOpen, setCommentsOpen] = useState({});
+  const [commentsByTurno, setCommentsByTurno] = useState({});
+  const [commentsLoading, setCommentsLoading] = useState({});
+  const [commentsError, setCommentsError] = useState("");
+  const [commentsLastDoc, setCommentsLastDoc] = useState({});
+  const [commentsHasMore, setCommentsHasMore] = useState({});
+  const [newCommentText, setNewCommentText] = useState({});
+  // Los selectores de día/turno ya no se usan; se calcula automáticamente
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingText, setEditingText] = useState("");
+  const [commentCountByTurno, setCommentCountByTurno] = useState({});
+
+  const fetchCommentCounts = async () => {
+    try {
+      const counts = {};
+      await Promise.all(TURNOS_VALS.map(async (t) => {
+        const q = fsQuery(collection(db, "partesDiarios", fecha, "comentarios"), where("turno", "==", t));
+        const snap = await getCountFromServer(q);
+        counts[t] = snap.data().count || 0;
+      }));
+      setCommentCountByTurno(counts);
+    } catch (_) {
+      // ignorar errores de conteo para no romper UI
+    }
+  };
+
+  const toggleComments = async (turno) => {
+    setCommentsOpen((prev) => ({ ...prev, [turno]: !prev[turno] }));
+    if (!commentsOpen[turno]) {
+      // se abrió: cargar primera página si no hay
+      if (!commentsByTurno?.[turno]) {
+        await loadComments(turno, false);
+      }
+    }
+  };
+
+  const loadComments = async (turno, append) => {
+    try {
+      setCommentsLoading((prev) => ({ ...prev, [turno]: true }));
+      setCommentsError("");
+      const baseRef = collection(db, "partesDiarios", fecha, "comentarios");
+      let q = fsQuery(baseRef, where("turno", "==", turno), orderBy("createdAt", "asc"), fsLimit(5));
+      const last = commentsLastDoc?.[turno];
+      if (append && last) q = fsQuery(baseRef, where("turno", "==", turno), orderBy("createdAt", "asc"), startAfter(last), fsLimit(5));
+      const snap = await getDocs(q);
+      const items = snap.docs.map(d => ({ id: d.id, ...d.data(), _ref: d }));
+      setCommentsByTurno((prev) => ({
+        ...prev,
+        [turno]: append ? [ ...(prev[turno] || []), ...items ] : items
+      }));
+      setCommentsLastDoc((prev) => ({ ...prev, [turno]: snap.docs.length > 0 ? snap.docs[snap.docs.length - 1] : prev[turno] }));
+      setCommentsHasMore((prev) => ({ ...prev, [turno]: snap.docs.length === 5 }));
+    } catch (e) {
+      setCommentsError(e?.message || String(e));
+    } finally {
+      setCommentsLoading((prev) => ({ ...prev, [turno]: false }));
+    }
+  };
+
+  const handleAddComment = async (turno) => {
+    const texto = (newCommentText?.[turno] || "").trim();
+    if (!puedeEditar) return;
+    try {
+      await addDoc(collection(db, "partesDiarios", fecha, "comentarios"), {
+        turno,
+        texto,
+        autor: localStorage.getItem("voluntarioEmail") || "anónimo",
+        fechaInformada: fecha,
+        diaInformado: getWeekdayEs(fecha),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      setNewCommentText((prev) => ({ ...prev, [turno]: "" }));
+      await loadComments(turno, false);
+      await fetchCommentCounts();
+    } catch (e) {
+      setCommentsError(e?.message || String(e));
+    }
+  };
+
+  const startEditComment = (turno, comment) => {
+    if (!puedeEditar) return;
+    setEditingCommentId(comment.id);
+    setEditingText(comment.texto || "");
+  };
+
+  const saveEditComment = async (turno, comment) => {
+    if (!puedeEditar) return;
+    try {
+      await updateDoc(doc(db, "partesDiarios", fecha, "comentarios", comment.id), {
+        texto: editingText,
+        updatedAt: serverTimestamp(),
+      });
+      setEditingCommentId(null);
+      setEditingText("");
+      await loadComments(turno, false);
+    } catch (e) {
+      setCommentsError(e?.message || String(e));
+    }
+  };
+
+  const deleteComment = async (turno, comment) => {
+    if (!puedeEditar) return;
+    try {
+      await deleteDoc(doc(db, "partesDiarios", fecha, "comentarios", comment.id));
+      await loadComments(turno, false);
+      await fetchCommentCounts();
+    } catch (e) {
+      setCommentsError(e?.message || String(e));
+    }
+  };
+
+  const getWeekdayEs = (fechaStr) => {
+    try {
+      const d = new Date(`${fechaStr}T00:00:00`);
+      const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+      return dias[d.getDay()] || '';
+    } catch { return ''; }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-stone-50 to-gray-100 p-2 pb-16">
@@ -297,6 +420,56 @@ const Partes = () => {
           </div>
         )}
 
+        {/* Resumen del día (arriba) */}
+        {resumenYaExiste && (
+          <div className="bg-white rounded-2xl shadow-xl p-6 border border-purple-300 mb-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">📊</div>
+                <h3 className="text-2xl font-bold text-purple-800">Resumen del Día</h3>
+              </div>
+              <div className="px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
+                Generado por IA
+              </div>
+            </div>
+            
+            <div className="bg-purple-50 rounded-xl p-6 border border-purple-300 shadow-sm">
+              <pre className="text-purple-800 leading-relaxed whitespace-pre-wrap break-words">
+{partes.resumen.texto}
+              </pre>
+            </div>
+            
+            {partes.resumen.fechaGeneracion && (
+              <div className="mt-4 text-sm text-purple-600">
+                Generado el: {partes.resumen.fechaGeneracion.toDate().toLocaleString('es-ES')}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Botón para generar resumen (arriba) */}
+        {!resumenYaExiste && partesCompletos && puedeEditar && (
+          <div className="mb-6">
+            <button
+              onClick={generarResumen}
+              disabled={generandoResumen}
+              className="w-full bg-gradient-to-r from-green-700 to-purple-600 text-white py-4 px-6 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 border-2 border-green-900 select-none"
+            >
+              {generandoResumen ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Generando resumen...
+                </>
+              ) : (
+                <>
+                  <FiFileText className="w-5 h-5" />
+                  Generar resumen del día
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
         {/* Resultados de búsqueda */}
         {seRealizoBusqueda && (
           <div className="mb-6">
@@ -363,6 +536,9 @@ const Partes = () => {
                       <h3 className={`text-xl font-bold ${tieneTexto ? "text-green-800" : "text-gray-600"}`}>
                         {turno.label}
                       </h3>
+                      {!!commentCountByTurno?.[turno.value] && (
+                        <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-300">💬 {commentCountByTurno[turno.value]}</span>
+                      )}
                     </div>
                     <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
                       tieneTexto 
@@ -408,61 +584,85 @@ const Partes = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* Comentarios colapsables */}
+                  <div className="mt-4">
+                    <button
+                      onClick={() => toggleComments(turno.value)}
+                      className="w-full text-left px-4 py-2 rounded-lg border border-purple-300 bg-white hover:bg-purple-50 text-purple-800 font-semibold"
+                    >
+                      {commentsOpen[turno.value] ? '▾ ' : '▸ '} Comentarios {Number.isInteger(commentCountByTurno?.[turno.value]) ? `(${commentCountByTurno[turno.value]})` : ''}
+                    </button>
+                    {commentsOpen[turno.value] && (
+                      <div className="mt-3 bg-white rounded-xl border border-purple-200 p-3 space-y-3">
+                        {commentsError && (
+                          <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">{commentsError}</div>
+                        )}
+                        {commentsLoading[turno.value] && !commentsByTurno?.[turno.value] && (
+                          <div className="text-sm text-purple-700">Cargando comentarios...</div>
+                        )}
+                        <div className="space-y-2">
+                          {(commentsByTurno?.[turno.value] || []).map((c) => (
+                            <div key={c.id} className="p-2 rounded border border-gray-200 bg-gray-50">
+                              <div className="text-xs text-gray-500 flex items-center gap-2">
+                                <span title={c.createdAt?.toDate ? c.createdAt.toDate().toLocaleString('es-ES') : ''}>
+                                  {(c.fechaInformada || '')} {c.diaInformado ? `- ${c.diaInformado}` : ''}
+                                </span>
+                                <span>· {c.autor || 'anónimo'}</span>
+                              </div>
+                              {editingCommentId === c.id ? (
+                                <div className="mt-2 space-y-2">
+                                  <textarea
+                                    className="w-full rounded border border-gray-300 p-2 text-sm"
+                                    rows={2}
+                                    value={editingText}
+                                    onChange={(e) => setEditingText(e.target.value)}
+                                  />
+                                  <div className="flex gap-2 justify-end">
+                                    <button onClick={() => saveEditComment(turno.value, c)} className="px-3 py-1 rounded bg-purple-600 text-white text-sm hover:bg-purple-700">Guardar</button>
+                                    <button onClick={() => { setEditingCommentId(null); setEditingText(''); }} className="px-3 py-1 rounded bg-gray-200 text-gray-700 text-sm hover:bg-gray-300">Cancelar</button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="mt-1 whitespace-pre-wrap text-sm text-gray-800">{c.texto}</div>
+                              )}
+                              {puedeEditar && editingCommentId !== c.id && (
+                                <div className="mt-2 flex gap-2 justify-end">
+                                  <button onClick={() => startEditComment(turno.value, c)} className="text-xs px-2 py-1 rounded bg-amber-100 text-amber-700 hover:bg-amber-200">Editar</button>
+                                  <button onClick={() => deleteComment(turno.value, c)} className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">Borrar</button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        {commentsHasMore[turno.value] && (
+                          <div className="flex justify-center">
+                            <button onClick={() => loadComments(turno.value, true)} className="px-4 py-2 rounded bg-purple-100 text-purple-700 hover:bg-purple-200 text-sm">Ver más</button>
+                          </div>
+                        )}
+                        {puedeEditar && (
+                          <div className="pt-2 border-t border-gray-200">
+                            <div className="flex gap-2">
+                              <textarea
+                                rows={2}
+                                placeholder="Escribí un comentario..."
+                                className="flex-1 rounded border border-gray-300 p-2 text-sm"
+                                value={newCommentText[turno.value] || ''}
+                                onChange={(e) => setNewCommentText((prev) => ({ ...prev, [turno.value]: e.target.value }))}
+                              />
+                              <button onClick={() => handleAddComment(turno.value)} className="px-4 py-2 rounded bg-green-700 text-white hover:bg-green-800 text-sm">Agregar</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Botón para generar resumen */}
-        {!resumenYaExiste && partesCompletos && puedeEditar && (
-          <div className="mb-6">
-            <button
-              onClick={generarResumen}
-              disabled={generandoResumen}
-              className="w-full bg-gradient-to-r from-green-700 to-purple-600 text-white py-4 px-6 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 hover:scale-105 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 border-2 border-green-900 select-none"
-            >
-              {generandoResumen ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Generando resumen...
-                </>
-              ) : (
-                <>
-                  <FiFileText className="w-5 h-5" />
-                  Generar resumen del día
-                </>
-              )}
-            </button>
-          </div>
-        )}
-
-        {/* Resumen del día */}
-        {resumenYaExiste && (
-          <div className="bg-white rounded-2xl shadow-xl p-6 border border-purple-300">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="text-3xl">📊</div>
-                <h3 className="text-2xl font-bold text-purple-800">Resumen del Día</h3>
-              </div>
-              <div className="px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
-                Generado por IA
-              </div>
-            </div>
-            
-            <div className="bg-purple-50 rounded-xl p-6 border border-purple-300 shadow-sm">
-              <pre className="text-purple-800 leading-relaxed whitespace-pre-wrap break-words">
-{partes.resumen.texto}
-              </pre>
-            </div>
-            
-            {partes.resumen.fechaGeneracion && (
-              <div className="mt-4 text-sm text-purple-600">
-                Generado el: {partes.resumen.fechaGeneracion.toDate().toLocaleString('es-ES')}
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Modal para cargar/editar parte */}

@@ -50,6 +50,7 @@ const DetalleHuesped = () => {
       gustos: huesped.gustos || "",
       movilidad: huesped.movilidad || "plena",
       come_asistido: huesped.come_asistido || false,
+      importante: huesped.importante || "",
     });
   };
 
@@ -158,6 +159,10 @@ const DetalleHuesped = () => {
             <textarea name="info_huesped" value={editData.info_huesped} onChange={handleEditChange} rows="4" className="w-full rounded-xl border border-orange-300 px-5 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-lg bg-white shadow-sm" placeholder="Información general del huésped..." />
           </div>
           <div>
+            <label className="block text-green-800 font-semibold mb-2">Importante (opcional) ⚠️</label>
+            <textarea name="importante" value={editData.importante} onChange={handleEditChange} rows="3" className="w-full rounded-xl border border-orange-300 px-5 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-lg bg-white shadow-sm" placeholder="Notas importantes para el equipo (visibles con alerta en el listado)" />
+          </div>
+          <div>
             <label className="block text-green-800 font-semibold mb-2">Gustos:</label>
             <textarea name="gustos" value={editData.gustos} onChange={handleEditChange} rows="4" className="w-full rounded-xl border border-orange-300 px-5 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-lg bg-white shadow-sm" placeholder="Gustos y preferencias..." />
           </div>
@@ -181,6 +186,14 @@ const DetalleHuesped = () => {
       ) : (
         <>
           <dl className="mb-8 space-y-6">
+            {huesped.importante && huesped.importante.trim() && (
+              <div>
+                <dt className="font-bold text-red-700 text-lg mb-2">Importante ⚠️</dt>
+                <dd className="text-lg text-red-800 bg-red-50 p-5 rounded-2xl border border-red-200 shadow-sm whitespace-pre-wrap">
+                  {huesped.importante}
+                </dd>
+              </div>
+            )}
             <div>
               <dt className="font-bold text-green-800 text-lg mb-2">Info. huésped:</dt>
               <dd className="text-lg text-green-900 bg-yellow-50 p-5 rounded-2xl border border-yellow-200 shadow-sm">

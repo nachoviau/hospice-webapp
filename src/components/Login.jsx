@@ -1,6 +1,6 @@
 // src/components/Login.jsx
 import { useState } from "react";
-import { collection, getDocs, addDoc, query, where } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { FiMail, FiLogIn, FiUser } from "react-icons/fi";
 import PWAInstallBanner from "./PWAInstallBanner";
@@ -21,16 +21,21 @@ const Login = ({ onLogin }) => {
         setLoading(false);
         return;
       }
-      // Buscar si ya existe
-      const q = query(collection(db, "voluntarios"), where("email", "==", email));
-      const querySnapshot = await getDocs(q);
-      if (querySnapshot.empty) {
-        // No existe, lo agrego
-        await addDoc(collection(db, "voluntarios"), { email });
-      }
+      const normalizedEmail = email.trim().toLowerCase();
+      const voluntarioRef = doc(db, "voluntarios", encodeURIComponent(normalizedEmail));
+      const voluntarioSnap = await getDoc(voluntarioRef);
+      await setDoc(
+        voluntarioRef,
+        {
+          email: normalizedEmail,
+          createdAt: voluntarioSnap.exists() ? voluntarioSnap.data()?.createdAt || serverTimestamp() : serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
       // Guardar en localStorage
-      localStorage.setItem("voluntarioEmail", email);
-      onLogin(email);
+      localStorage.setItem("voluntarioEmail", normalizedEmail);
+      onLogin(normalizedEmail);
     } catch (err) {
       setError("No se pudo registrar el correo: " + err.message);
     } finally {

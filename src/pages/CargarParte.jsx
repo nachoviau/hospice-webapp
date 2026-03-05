@@ -102,6 +102,7 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
     setMensaje("");
     
     try {
+      const uploadedBy = (localStorage.getItem("voluntarioEmail") || "").trim().toLowerCase();
       // Subir imágenes a Firebase Storage
       const imagenesUrls = [];
       if (imagenes.length > 0) {
@@ -145,6 +146,7 @@ const CargarParte = ({ fechaInicial, turnoInicial, onClose }) => {
             [turno]: { 
               texto, 
               imagenes: imagenesUrls,
+              uploadedBy: uploadedBy && uploadedBy !== "usuario_anonimo" ? uploadedBy : null,
               fechaActualizacion: new Date(),
             },
           },

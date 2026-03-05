@@ -58,9 +58,12 @@ const ListaHuespedes = ({ refrescar }) => {
             <button
               key={h.id}
               onClick={() => navigate(`/huespedes/${h.id}`)}
-              className="bg-green-800 rounded-2xl shadow-md hover:shadow-lg p-8 border border-green-900 text-left text-2xl sm:text-3xl font-semibold text-white hover:bg-green-900 transition-all duration-300 transform hover:-translate-y-1 select-none"
+              className="bg-green-800 rounded-2xl shadow-md hover:shadow-lg p-8 border border-green-900 text-left text-2xl sm:text-3xl font-semibold text-white hover:bg-green-900 transition-all duration-300 transform hover:-translate-y-1 select-none flex items-center justify-between"
             >
-              {h.nombre}
+              <span className="truncate mr-4">{h.nombre}</span>
+              {h.importante && h.importante.trim() ? (
+                <span aria-label="alerta" title="Importante" className="shrink-0">⚠️</span>
+              ) : null}
             </button>
           ))}
         </>

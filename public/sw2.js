@@ -1,5 +1,5 @@
-// Nombre del cache - cambiar versión para forzar actualizaciones
-const CACHE_NAME = 'san-camilo-v38';
+// Nombre del cache - cambiar versión para forzar actualizaciones (nuevo SW)
+const CACHE_NAME = 'san-camilo-v41';
 const urlsToCache = [
   '/',
   '/index.html', // precache html shell para evitar pantalla blanca cuando no hay red
@@ -144,4 +144,50 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Eliminado intervalo de actualización automática para reducir tráfico. 
+// Mostrar push en background (payload data-only enviado por FCM)
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  let payload = {};
+  try {
+    payload = event.data.json();
+  } catch (_) {
+    return;
+  }
+
+  const title = payload?.title || 'Nuevo comentario en partes';
+  const body = payload?.body || 'Hay actividad nueva en una conversación.';
+  const url = payload?.url || '/partes';
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: '/logo-hospice.png',
+      badge: '/logo-hospice.png',
+      data: { url },
+    })
+  );
+});
+
+// Abrir o enfocar la app cuando se toca la notificación
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification?.data?.url || '/partes';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        const currentUrl = new URL(client.url);
+        const expectedUrl = new URL(targetUrl, self.location.origin);
+        if (currentUrl.origin === expectedUrl.origin) {
+          client.focus();
+          client.navigate(expectedUrl.toString());
+          return;
+        }
+      }
+      return self.clients.openWindow(targetUrl);
+    })
+  );
+});
+
+// Eliminado intervalo de actualización automática para reducir tráfico.

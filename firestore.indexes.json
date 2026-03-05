@@ -1,4 +1,13 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "comentarios",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "turno", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
-} 
+}

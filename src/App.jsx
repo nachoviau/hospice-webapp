@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { useEffect } from "react";
 import Layout from "./components/Layout";
 import Login from "./components/Login";
 import Huespedes from "./pages/Huespedes";
@@ -9,9 +10,17 @@ import Partes from "./pages/Partes";
 import DetalleHuesped from "./pages/DetalleHuesped";
 import HistorialHuespedes from "./pages/HistorialHuespedes";
 import AdiosHuesped from "./pages/AdiosHuesped";
+import { bootstrapPushNotifications } from "./services/pushNotifications";
 
 function AppContent() {
   const { usuarioEmail, cargando, login } = useAuth();
+
+  useEffect(() => {
+    if (!usuarioEmail) return;
+    bootstrapPushNotifications(usuarioEmail).catch((error) => {
+      console.error("No se pudieron inicializar notificaciones push", error);
+    });
+  }, [usuarioEmail]);
 
   if (cargando) return <p className="text-amber-700 text-center mt-8">Preparando el sistema...</p>;
 

@@ -14,6 +14,23 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <title>San Camilo</title>
+    <script>
+      (function() {
+        try {
+          var host = window.location.host;
+          var href = window.location.href;
+          var qs = window.location.search || '';
+          var isDevHost = /^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/.test(host);
+          var isPreview = host.includes('--'); // firebase preview channels
+          var skip = qs.includes('no-redirect');
+          var target = 'hospice-san-camilo.web.app';
+          if (!isDevHost && !isPreview && !skip && host !== target) {
+            var url = href.replace(host, target);
+            window.location.replace(url);
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

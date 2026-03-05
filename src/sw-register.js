@@ -2,19 +2,9 @@
 export function registerSW() {
 	if ('serviceWorker' in navigator) {
 		window.addEventListener('load', () => {
-			navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+			navigator.serviceWorker.register('/sw2.js', { updateViaCache: 'none' })
 				.then((registration) => {
-					// Forzar chequeo de actualización al ganar foco
-					const tryUpdate = () => {
-						if (registration && typeof registration.update === 'function') {
-							registration.update();
-						}
-					};
-					window.addEventListener('visibilitychange', () => {
-						if (document.visibilityState === 'visible') tryUpdate();
-					});
-
-					// Activar inmediatamente un nuevo SW
+					// Activar inmediatamente un nuevo SW si ya está en espera
 					if (registration.waiting) {
 						registration.waiting.postMessage({ type: 'SKIP_WAITING' });
 					}
@@ -28,8 +18,11 @@ export function registerSW() {
 						});
 					});
 
-					// Recargar cuando el controlador cambia (nuevo SW activo)
+					// Recargar una sola vez cuando cambia el controlador (nuevo SW activo)
+					let reloaded = false;
 					navigator.serviceWorker.addEventListener('controllerchange', () => {
+						if (reloaded) return;
+						reloaded = true;
 						window.location.reload();
 					});
 				})

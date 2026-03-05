@@ -26,6 +26,25 @@ const Layout = () => {
     window.location.reload();
   };
 
+  const forceUpdateApp = async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) {
+          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          try { await reg.update(); } catch {}
+          try { await reg.unregister(); } catch {}
+        }
+      }
+      if (typeof caches !== 'undefined') {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(k => caches.delete(k)));
+      }
+    } finally {
+      window.location.reload();
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-100 via-stone-50 to-gray-100 font-sans">
       {/* Indicador de modo solo lectura */}

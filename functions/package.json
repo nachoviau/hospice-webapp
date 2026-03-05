@@ -6,7 +6,9 @@
     "shell": "firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "logs": "firebase functions:log",
+    "migrate:voluntarios:dry": "node scripts/migrate-voluntarios.js",
+    "migrate:voluntarios": "DRY_RUN=false node scripts/migrate-voluntarios.js"
   },
   "engines": {
     "node": "22"
