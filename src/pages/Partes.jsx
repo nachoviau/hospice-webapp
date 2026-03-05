@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import CargarParte from "./CargarParte";
 import { doc, getDoc, updateDoc, collection, getDocs, addDoc, where, orderBy, limit as fsLimit, query as fsQuery, startAfter, serverTimestamp, deleteDoc, getCountFromServer } from "firebase/firestore";
@@ -7,6 +8,7 @@ import { generateSummary } from "../services/chatgptService";
 import { FiCalendar, FiPlus, FiEye, FiEdit, FiFileText, FiClock, FiCheckCircle, FiAlertCircle, FiX } from "react-icons/fi";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
+import { markConversationActive } from "../services/activeConversations";
 
 const TURNOS = [
   { value: "mañana", label: "Mañana", icon: "🌅", color: "amber" },
@@ -16,6 +18,7 @@ const TURNOS = [
 
 const Partes = () => {
   const { puedeEditar } = useAuth();
+  const navigate = useNavigate();
   const [fecha, setFecha] = useState(() => {
     const tz = 'America/Argentina/Buenos_Aires';
     const fmt = new Intl.DateTimeFormat('en-CA', {
@@ -117,6 +120,7 @@ const Partes = () => {
     };
     fetchPartes();
     fetchCommentCounts();
+    fetchActiveConversationsCount();
   }, [fecha, modalAbierto, generandoResumen]);
 
   const generarResumen = async () => {
@@ -220,6 +224,7 @@ const Partes = () => {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingText, setEditingText] = useState("");
   const [commentCountByTurno, setCommentCountByTurno] = useState({});
+  const [activeConversationsCount, setActiveConversationsCount] = useState(0);
 
   const fetchCommentCounts = async () => {
     try {
@@ -230,6 +235,16 @@ const Partes = () => {
         counts[t] = snap.data().count || 0;
       }));
       setCommentCountByTurno(counts);
+    } catch (_) {
+      // ignorar errores de conteo para no romper UI
+    }
+  };
+
+  const fetchActiveConversationsCount = async () => {
+    try {
+      const q = fsQuery(collection(db, "conversacionesActivas"), where("activa", "==", true));
+      const snap = await getCountFromServer(q);
+      setActiveConversationsCount(snap.data().count || 0);
     } catch (_) {
       // ignorar errores de conteo para no romper UI
     }
@@ -271,19 +286,23 @@ const Partes = () => {
   const handleAddComment = async (turno) => {
     const texto = (newCommentText?.[turno] || "").trim();
     if (!puedeEditar) return;
+    if (!texto) return;
     try {
+      const autor = localStorage.getItem("voluntarioEmail") || "anónimo";
       await addDoc(collection(db, "partesDiarios", fecha, "comentarios"), {
         turno,
         texto,
-        autor: localStorage.getItem("voluntarioEmail") || "anónimo",
+        autor,
         fechaInformada: fecha,
         diaInformado: getWeekdayEs(fecha),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+      await markConversationActive({ fecha, turno, texto, autor });
       setNewCommentText((prev) => ({ ...prev, [turno]: "" }));
       await loadComments(turno, false);
       await fetchCommentCounts();
+      await fetchActiveConversationsCount();
     } catch (e) {
       setCommentsError(e?.message || String(e));
     }
@@ -336,6 +355,17 @@ const Partes = () => {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-amber-900 mb-2">Partes Diarios</h1>
           <p className="text-amber-700 text-lg">Gestión de reportes por turnos</p>
+          <div className="mt-4 flex justify-center">
+            <button
+              onClick={() => navigate("/conversaciones")}
+              className="w-full max-w-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-purple-800 font-semibold select-none inline-flex items-center justify-center gap-3"
+            >
+              <span>Conversaciones activas</span>
+              <span className="rounded-full bg-white/20 border border-white/40 px-2.5 py-0.5 text-xs font-bold">
+                {activeConversationsCount}
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Controles principales */}

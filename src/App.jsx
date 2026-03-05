@@ -7,6 +7,7 @@ import Huespedes from "./pages/Huespedes";
 import Calendario from "./pages/Calendario";
 import Tareas from "./pages/Tareas";
 import Partes from "./pages/Partes";
+import Conversaciones from "./pages/Conversaciones";
 import DetalleHuesped from "./pages/DetalleHuesped";
 import HistorialHuespedes from "./pages/HistorialHuespedes";
 import AdiosHuesped from "./pages/AdiosHuesped";
@@ -39,6 +40,7 @@ function AppContent() {
         <Route path="calendario" element={<Calendario />} />
         <Route path="tareas" element={<Tareas />} />
         <Route path="partes" element={<Partes />} />
+        <Route path="conversaciones" element={<Conversaciones />} />
         <Route path="*" element={<Navigate to="/huespedes" replace />} />
       </Route>
     </Routes>
